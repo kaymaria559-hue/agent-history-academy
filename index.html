@@ -734,6 +734,9 @@ button{font:inherit;cursor:pointer}
   var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var TRANSITION_MS = reduceMotion ? 50 : 650;
 
+  /* URL penuh Modul 02 – Arkib Pemimpin (GitHub Pages) */
+  var MODULE02_URL = 'https://kaymaria559-hue.github.io/agent-history-academy/pm-archive-satu-fail.html';
+
   /* ---------------------------------------------------------
      1. DATA MISI
      available: true  = modul wujud dan boleh dimainkan
@@ -752,8 +755,11 @@ button{font:inherit;cursor:pointer}
       desc:'Kenali objektif dan arahan pengembaraan Ejen Sejarah.',
       // Misi 01 menggunakan skrin Taklimat Misi (Skrin 02) yang sudah dibina.
       start:function(){ closeModal(); markDone(1); goTo(2); } },
-    { id:2, title:'ARKIB PEMIMPIN', icon:'archive', available:false,
-      desc:'Terokai biodata dan sejarah 10 kedudukan Perdana Menteri Malaysia.' },
+    { id:2, title:'ARKIB PEMIMPIN', icon:'archive', available:true,
+      desc:'Terokai biodata dan sejarah 10 kedudukan Perdana Menteri Malaysia.',
+      // Modul 02 diterbitkan secara berasingan di GitHub Pages.
+      // Dibuka dalam tab baharu terus daripada klik murid supaya tidak disekat pelayar.
+      start:function(){ window.open(MODULE02_URL, '_blank', 'noopener'); closeModal(); } },
     { id:3, title:'JEJAK KRONOLOGI', icon:'timeline', available:false,
       desc:'Susun Perdana Menteri Malaysia mengikut urutan yang betul.' },
     { id:4, title:'GALERI PENGHARGAAN', icon:'gallery', available:false,
