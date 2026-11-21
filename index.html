@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agent History Academy – Misi Jejak Perdana Menteri Malaysia</title>
+<meta name="description" content="Permainan pengembaraan pendidikan Sejarah Tahun 6: Misi Jejak Perdana Menteri Malaysia.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Nunito+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* =========================================================
+   1. TOKEN WARNA & ASAS
+   ========================================================= */
+:root{
+  --bg:#071426;
+  --bg2:#10233D;
+  --gold:#D6AD55;
+  --gold-light:#F0D28E;
+  --cyan:#53D8E8;
+  --white:#F5F7FA;
+  --muted:#A9B7C9;
+  --panel:rgba(16,35,61,.72);
+  --line:rgba(83,216,232,.28);
+  --radius:16px;
+  --font-display:'Orbitron','Segoe UI',system-ui,sans-serif;
+  --font-body:'Nunito Sans','Segoe UI',system-ui,-apple-system,Roboto,Arial,sans-serif;
+  --ease:cubic-bezier(.22,.8,.26,1);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  background:var(--bg);
+  color:var(--white);
+  font-family:var(--font-body);
+  font-size:16px;
+  line-height:1.6;
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+img{max-width:100%;display:block}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--cyan);outline-offset:3px}
+
+/* =========================================================
+   2. LATAR BELAKANG: grid, cahaya, zarah, garis imbasan
+   ========================================================= */
+.bg-layer{position:fixed;inset:0;pointer-events:none;z-index:0}
+.bg-gradient{
+  background:
+    radial-gradient(ellipse 80% 60% at 50% -10%, rgba(83,216,232,.16), transparent 60%),
+    radial-gradient(ellipse 60% 50% at 100% 100%, rgba(214,173,85,.10), transparent 60%),
+    linear-gradient(180deg,var(--bg) 0%, #0a1a30 60%, var(--bg) 100%);
+}
+.bg-grid{
+  background-image:
+    linear-gradient(rgba(83,216,232,.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(83,216,232,.06) 1px, transparent 1px);
+  background-size:48px 48px;
+  mask-image:radial-gradient(ellipse at center, #000 30%, transparent 80%);
+  -webkit-mask-image:radial-gradient(ellipse at center, #000 30%, transparent 80%);
+}
+#particles{position:fixed;inset:0;z-index:0;pointer-events:none}
+.bg-scan{overflow:hidden}
+.bg-scan::before{
+  content:"";position:absolute;left:0;right:0;height:140px;top:-140px;
+  background:linear-gradient(180deg,transparent,rgba(83,216,232,.07),transparent);
+  animation:scanMove 7s linear infinite;
+}
+.bg-scan::after{ /* garis halus ala skrin */
+  content:"";position:absolute;inset:0;
+  background:repeating-linear-gradient(0deg,rgba(255,255,255,.018) 0 1px,transparent 1px 3px);
+}
+@keyframes scanMove{to{transform:translateY(calc(100vh + 280px))}}
+
+/* =========================================================
+   3. SISTEM SKRIN
+   ========================================================= */
+.app{position:relative;z-index:1;min-height:100vh;min-height:100dvh;overflow-x:hidden;overflow-x:clip}
+.screen{
+  display:none;
+  min-height:100vh;min-height:100dvh;
+  flex-direction:column;align-items:center;justify-content:center;
+  padding:32px 16px 40px;
+}
+.screen.active{display:flex;animation:screenIn .6s var(--ease) both}
+@keyframes screenIn{from{opacity:0;transform:scale(1.015)}to{opacity:1;transform:none}}
+.container{width:100%;max-width:1120px;margin:0 auto}
+
+/* Tirai sinematik semasa peralihan */
+.curtain{
+  position:fixed;inset:0;z-index:50;pointer-events:none;
+  background:var(--bg);opacity:0;transition:opacity .35s ease;
+}
+.curtain.show{opacity:.85}
+
+/* =========================================================
+   4. KOMPONEN UMUM
+   ========================================================= */
+.eyebrow{
+  font-family:var(--font-display);font-size:.72rem;letter-spacing:.32em;
+  color:var(--cyan);text-transform:uppercase;
+}
+.heading{
+  font-family:var(--font-display);font-weight:800;
+  font-size:clamp(1.5rem,4vw,2.5rem);letter-spacing:.06em;
+  color:var(--gold);text-shadow:0 0 24px rgba(214,173,85,.35);
+  line-height:1.2;
+}
+.sub{color:var(--muted);font-size:clamp(.95rem,2vw,1.1rem)}
+.panel{
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  box-shadow:0 20px 60px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.04);
+  position:relative;
+}
+/* sudut bracket HUD */
+.hud::before,.hud::after{
+  content:"";position:absolute;width:22px;height:22px;border:2px solid var(--gold);pointer-events:none;
+}
+.hud::before{top:-1px;left:-1px;border-right:0;border-bottom:0;border-top-left-radius:var(--radius)}
+.hud::after{bottom:-1px;right:-1px;border-left:0;border-top:0;border-bottom-right-radius:var(--radius)}
+
+/* Butang */
+.btn-row{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:28px}
+.btn{
+  min-height:48px;padding:12px 26px;border-radius:999px;
+  font-family:var(--font-display);font-size:.82rem;font-weight:600;letter-spacing:.14em;
+  text-transform:uppercase;border:1.5px solid var(--cyan);
+  background:rgba(83,216,232,.06);color:var(--cyan);
+  transition:transform .2s var(--ease), background .2s, box-shadow .2s, color .2s;
+}
+.btn:hover{background:rgba(83,216,232,.16);box-shadow:0 0 22px rgba(83,216,232,.35);transform:translateY(-2px)}
+.btn:active{transform:translateY(0)}
+.btn-gold{
+  border-color:var(--gold);color:#1a1205;
+  background:linear-gradient(135deg,var(--gold-light),var(--gold) 55%,#b48a35);
+  box-shadow:0 0 0 rgba(214,173,85,0);
+}
+.btn-gold:hover{background:linear-gradient(135deg,#fff0c4,var(--gold-light) 50%,var(--gold));box-shadow:0 0 28px rgba(214,173,85,.5);color:#1a1205}
+.btn-ghost{border-color:rgba(169,183,201,.5);color:var(--muted);background:transparent}
+.btn-ghost:hover{color:var(--white);border-color:var(--white);background:rgba(255,255,255,.06);box-shadow:none}
+.btn-lg{min-height:58px;padding:16px 40px;font-size:1rem}
+
+/* =========================================================
+   5. SKRIN 01 – INTRO SINEMATIK
+   ========================================================= */
+#s1{text-align:center}
+.logo{
+  width:112px;height:112px;margin:0 auto 26px;position:relative;
+  animation:fadeUp 1s var(--ease) both;
+}
+.logo svg{width:100%;height:100%;filter:drop-shadow(0 0 18px rgba(83,216,232,.55))}
+.logo .ring{animation:spin 18s linear infinite;transform-origin:50% 50%}
+@keyframes spin{to{transform:rotate(360deg)}}
+.intro-title{
+  font-family:var(--font-display);font-weight:800;
+  font-size:clamp(1.9rem,7vw,4.6rem);letter-spacing:.08em;line-height:1.08;
+  background:linear-gradient(100deg,#9c7628 0%,var(--gold) 25%,#fff3cf 45%,var(--gold) 60%,#9c7628 100%);
+  background-size:250% 100%;
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 0 22px rgba(214,173,85,.3));
+  animation:titleReveal 1.4s var(--ease) .3s both, shine 5s linear 1.8s infinite;
+}
+@keyframes titleReveal{
+  from{opacity:0;letter-spacing:.5em;filter:blur(10px)}
+  to{opacity:1;letter-spacing:.08em;filter:drop-shadow(0 0 22px rgba(214,173,85,.3))}
+}
+@keyframes shine{to{background-position:-250% 0}}
+.intro-mission{
+  margin-top:18px;font-family:var(--font-display);font-weight:600;
+  font-size:clamp(.85rem,2.6vw,1.3rem);letter-spacing:.18em;color:var(--cyan);
+  animation:fadeUp .9s var(--ease) 1.1s both;
+}
+.intro-tag{
+  display:inline-block;margin-top:14px;padding:6px 16px;border:1px solid var(--gold);
+  border-radius:999px;font-size:.78rem;letter-spacing:.24em;color:var(--gold);font-weight:700;
+  animation:fadeUp .9s var(--ease) 1.3s both;
+}
+.intro-quote{
+  max-width:640px;margin:26px auto 0;color:var(--muted);font-style:italic;
+  font-size:clamp(.98rem,2.2vw,1.15rem);
+  animation:fadeUp .9s var(--ease) 1.5s both;
+}
+#s1 .btn-row{animation:fadeUp .9s var(--ease) 1.8s both}
+.btn-start{position:relative;overflow:hidden}
+.btn-start::after{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.6) 50%,transparent 70%);
+  transform:translateX(-120%);animation:sweep 3s ease-in-out 2.6s infinite;
+}
+@keyframes sweep{0%{transform:translateX(-120%)}40%,100%{transform:translateX(120%)}}
+.intro-foot{margin-top:40px;font-size:.75rem;color:rgba(169,183,201,.6);letter-spacing:.2em;animation:fadeUp .9s var(--ease) 2s both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+
+/* =========================================================
+   6. SKRIN 02 – TAKLIMAT MISI SULIT
+   ========================================================= */
+.dossier{max-width:860px;margin:0 auto;padding:clamp(22px,4vw,44px)}
+.stamp{
+  position:absolute;top:18px;right:18px;
+  font-family:var(--font-display);font-weight:800;font-size:.72rem;letter-spacing:.2em;
+  color:#e2565c;border:2px solid #e2565c;padding:4px 10px;border-radius:6px;transform:rotate(6deg);
+  opacity:.85;
+}
+.dossier-head{display:flex;flex-direction:column;gap:6px;margin-bottom:22px;padding-right:110px}
+.file-meta{font-size:.78rem;color:var(--muted);letter-spacing:.08em}
+.story p{margin-bottom:12px;color:var(--white)}
+.story p:first-child{font-weight:800;color:var(--gold);font-size:1.1rem}
+.story .ask{color:var(--cyan);font-weight:700}
+.objectives{margin-top:24px;display:grid;gap:12px}
+.objectives h3{font-family:var(--font-display);font-size:.8rem;letter-spacing:.24em;color:var(--cyan);margin-bottom:2px}
+.obj{
+  display:flex;gap:14px;align-items:flex-start;padding:14px 16px;border-radius:12px;
+  background:rgba(7,20,38,.6);border:1px solid rgba(214,173,85,.25);
+  opacity:0;transform:translateX(-14px);
+}
+.screen.active .obj{animation:slideIn .6s var(--ease) forwards}
+.screen.active .obj:nth-of-type(1){animation-delay:.35s}
+.screen.active .obj:nth-of-type(2){animation-delay:.5s}
+.screen.active .obj:nth-of-type(3){animation-delay:.65s}
+@keyframes slideIn{to{opacity:1;transform:none}}
+.obj-num{
+  flex:0 0 36px;height:36px;border-radius:50%;display:grid;place-items:center;
+  font-family:var(--font-display);font-weight:800;color:#1a1205;
+  background:linear-gradient(135deg,var(--gold-light),var(--gold));
+}
+.dossier .scanbar{
+  position:absolute;left:0;right:0;top:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--cyan),transparent);
+  box-shadow:0 0 14px var(--cyan);opacity:0;
+}
+.screen.active .dossier .scanbar{animation:docScan 2.4s ease-in-out .2s 1 both}
+@keyframes docScan{0%{top:0;opacity:0}10%{opacity:1}90%{opacity:1}100%{top:100%;opacity:0}}
+
+/* =========================================================
+   7. SKRIN 03 – KENALI EJEN (maskot CSS)
+   ========================================================= */
+.agent-wrap{
+  display:grid;grid-template-columns:minmax(220px,320px) 1fr;gap:clamp(20px,4vw,48px);
+  align-items:center;max-width:980px;margin:0 auto;
+}
+.agent-stage{position:relative;height:340px;display:grid;place-items:end center}
+.screen.active .agent-stage{animation:agentIn .9s var(--ease) both}
+@keyframes agentIn{from{opacity:0;transform:translateY(40px) scale(.9)}to{opacity:1;transform:none}}
+.holo-base{
+  position:absolute;bottom:0;width:220px;height:40px;border-radius:50%;
+  background:radial-gradient(ellipse,rgba(83,216,232,.55),transparent 70%);
+  filter:blur(2px);
+}
+.holo-beam{
+  position:absolute;bottom:18px;width:200px;height:300px;
+  background:linear-gradient(0deg,rgba(83,216,232,.22),transparent);
+  clip-path:polygon(15% 100%,85% 100%,100% 0,0 0);
+}
+/* Maskot ejen: dibina sepenuhnya dengan CSS */
+.agent{position:relative;width:180px;height:290px;margin-bottom:20px;animation:bob 3.2s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-8px)}}
+.agent .hat-brim{position:absolute;top:30px;left:22px;width:136px;height:16px;border-radius:50%;background:#1b2b45;border:2px solid #2c4268;z-index:4}
+.agent .hat-top{position:absolute;top:0;left:46px;width:88px;height:40px;border-radius:30px 30px 8px 8px;background:#1b2b45;border:2px solid #2c4268;z-index:4}
+.agent .hat-band{position:absolute;top:26px;left:46px;width:88px;height:8px;background:var(--gold);z-index:5}
+.agent .head{
+  position:absolute;top:34px;left:40px;width:100px;height:104px;border-radius:46% 46% 44% 44%;
+  background:radial-gradient(circle at 35% 30%,#f6cfa6,#d9a073);z-index:3;
+}
+.agent .glasses{position:absolute;top:70px;left:46px;width:88px;height:26px;z-index:6;display:flex;justify-content:space-between;align-items:center}
+.agent .lens{width:38px;height:24px;border-radius:8px 8px 14px 14px;background:linear-gradient(135deg,#0b1a2f,#27507a);border:2px solid #0b1a2f;position:relative;overflow:hidden}
+.agent .lens::after{content:"";position:absolute;top:3px;left:5px;width:12px;height:5px;border-radius:4px;background:rgba(83,216,232,.8)}
+.agent .bridge{position:absolute;left:38px;top:9px;width:12px;height:3px;background:#0b1a2f}
+.agent .smile{position:absolute;top:110px;left:74px;width:32px;height:14px;border-bottom:4px solid #7a3b2a;border-radius:0 0 20px 20px;z-index:6}
+.agent .cheek{position:absolute;top:100px;width:12px;height:7px;border-radius:50%;background:rgba(232,120,110,.5);z-index:6}
+.agent .cheek.l{left:54px}.agent .cheek.r{left:114px}
+.agent .body{
+  position:absolute;top:128px;left:24px;width:132px;height:130px;border-radius:40px 40px 18px 18px;
+  background:linear-gradient(180deg,#1b2b45,#122036);border:2px solid #2c4268;z-index:2;overflow:hidden;
+}
+.agent .shirt{position:absolute;top:0;left:46px;width:40px;height:74px;background:var(--white);clip-path:polygon(0 0,100% 0,50% 100%)}
+.agent .tie{position:absolute;top:8px;left:59px;width:14px;height:60px;background:var(--gold);clip-path:polygon(20% 0,80% 0,100% 80%,50% 100%,0 80%)}
+.agent .badge{position:absolute;top:44px;left:96px;width:22px;height:22px;border-radius:50%;background:var(--cyan);box-shadow:0 0 12px var(--cyan);display:grid;place-items:center;font:800 10px var(--font-display);color:var(--bg)}
+.agent .arm{position:absolute;top:140px;width:30px;height:92px;border-radius:16px;background:#1b2b45;border:2px solid #2c4268;z-index:1}
+.agent .arm.l{left:6px;transform:rotate(12deg)}
+.agent .arm.r{left:144px;transform-origin:top center;animation:wave 2.4s ease-in-out infinite;z-index:3}
+.agent .arm.r::after{content:"";position:absolute;bottom:-12px;left:2px;width:24px;height:24px;border-radius:50%;background:#e9b588}
+@keyframes wave{0%,60%,100%{transform:rotate(-12deg)}70%{transform:rotate(-150deg)}80%{transform:rotate(-120deg)}90%{transform:rotate(-150deg)}}
+.agent .legs{position:absolute;top:252px;left:50px;width:80px;height:34px;display:flex;justify-content:space-between}
+.agent .legs span{width:32px;height:34px;background:#0e1a2c;border-radius:0 0 10px 10px}
+.agent-name{position:absolute;bottom:-6px;font:700 .72rem var(--font-display);letter-spacing:.22em;color:var(--cyan)}
+
+.dialogue{padding:clamp(20px,3.5vw,34px);min-height:300px}
+.screen.active .dialogue{animation:fadeUp .7s var(--ease) .3s both}
+.dialogue .who{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.dialogue .who b{font-family:var(--font-display);color:var(--gold);letter-spacing:.12em;font-size:.9rem}
+.dot-live{width:9px;height:9px;border-radius:50%;background:#4ade80;box-shadow:0 0 10px #4ade80;animation:blink 1.4s infinite}
+@keyframes blink{50%{opacity:.3}}
+.typed{white-space:pre-line;font-size:clamp(1rem,2.2vw,1.12rem);min-height:210px}
+.typed.typing::after{content:"▌";color:var(--cyan);animation:blink .8s steps(1) infinite}
+.type-hint{font-size:.78rem;color:var(--muted);margin-top:8px}
+
+/* =========================================================
+   8. SKRIN 04 – PASUKAN PROJEK
+   ========================================================= */
+.team-head{text-align:center;margin-bottom:30px}
+.team-head .sub{margin-top:8px}
+.team-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(18px,3vw,32px);max-width:960px;margin:0 auto}
+.profile{
+  padding:24px 22px 26px;text-align:center;
+  opacity:0;transform:translateY(30px);
+}
+.screen.active .profile{animation:cardIn .8s var(--ease) forwards}
+.screen.active .profile:nth-child(2){animation-delay:.18s}
+@keyframes cardIn{to{opacity:1;transform:none}}
+.role-chip{
+  display:inline-block;padding:5px 14px;border-radius:999px;margin-bottom:18px;
+  font:700 .7rem var(--font-display);letter-spacing:.18em;color:var(--bg);background:var(--cyan);
+}
+.photo-frame{
+  position:relative;width:min(240px,70vw);aspect-ratio:4/5;margin:0 auto 20px;
+  padding:5px;border-radius:18px;
+  background:linear-gradient(145deg,#fff0c4,var(--gold) 30%,#8a6420 55%,var(--gold) 75%,#fff0c4);
+  box-shadow:0 0 0 1px rgba(214,173,85,.3),0 18px 40px rgba(0,0,0,.45),0 0 40px rgba(214,173,85,.22);
+}
+.photo-frame img{
+  width:100%;height:100%;object-fit:cover;border-radius:13px;background:#fff;
+}
+.photo-frame.lecturer img{object-position:50% 20%}
+.photo-frame.teacher img{object-position:40% 15%}
+/* cahaya sinematik lembut di atas foto (bukan teks) */
+.photo-frame::after{
+  content:"";position:absolute;inset:5px;border-radius:13px;pointer-events:none;
+  background:
+    linear-gradient(180deg,rgba(83,216,232,.10),transparent 30%,transparent 70%,rgba(7,20,38,.35)),
+    radial-gradient(ellipse at 80% 0%,rgba(255,240,200,.18),transparent 55%);
+}
+.photo-frame .glint{
+  position:absolute;inset:5px;border-radius:13px;overflow:hidden;pointer-events:none;
+}
+.photo-frame .glint::before{
+  content:"";position:absolute;top:0;bottom:0;width:40%;left:-60%;
+  background:linear-gradient(100deg,transparent,rgba(255,255,255,.22),transparent);
+  animation:glint 6s ease-in-out 1.2s infinite;
+}
+@keyframes glint{0%{left:-60%}25%,100%{left:130%}}
+.profile h3{font-size:clamp(1.12rem,2.4vw,1.35rem);font-weight:800;color:var(--white);line-height:1.3}
+.profile .role{margin-top:4px;font:700 .78rem var(--font-display);letter-spacing:.16em;color:var(--gold)}
+.info{margin-top:16px;display:grid;gap:8px;text-align:left}
+.info div{
+  display:flex;justify-content:space-between;gap:12px;padding:9px 14px;border-radius:10px;
+  background:rgba(7,20,38,.55);border:1px solid rgba(83,216,232,.15);font-size:.92rem;
+}
+.info dt{color:var(--muted)}
+.info dd{color:var(--white);font-weight:700;text-align:right}
+.img-fallback{display:none;width:100%;height:100%;border-radius:13px;background:var(--bg2);place-items:center;color:var(--muted);font-size:.85rem;padding:12px;text-align:center}
+.photo-frame.broken img{display:none}
+.photo-frame.broken .img-fallback{display:grid}
+
+/* =========================================================
+   9. SKRIN 05 – PUSAT KAWALAN MISI
+   ========================================================= */
+#s5{justify-content:flex-start;padding-top:28px}
+.mc-top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:22px}
+.mc-actions{display:flex;flex-wrap:wrap;gap:10px}
+.mc-actions .btn{min-height:44px;padding:10px 18px;font-size:.74rem}
+.mc-layout{display:grid;grid-template-columns:280px 1fr;gap:22px;align-items:start}
+.status-panel{padding:20px}
+.status-panel h3{font:700 .78rem var(--font-display);letter-spacing:.22em;color:var(--cyan);margin-bottom:14px}
+.agent-id{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.agent-avatar{
+  width:52px;height:52px;border-radius:50%;flex:0 0 52px;
+  background:radial-gradient(circle at 50% 38%,#f6cfa6 0 30%,transparent 31%),
+             linear-gradient(180deg,#1b2b45 0 28%,transparent 29%),
+             radial-gradient(circle at 50% 120%,#1b2b45 0 55%,transparent 56%),
+             var(--bg);
+  border:2px solid var(--gold);box-shadow:0 0 14px rgba(214,173,85,.35);
+}
+.agent-id b{display:block;font-family:var(--font-display);font-size:.86rem;letter-spacing:.08em}
+.agent-id small{color:var(--muted)}
+.stat{display:flex;justify-content:space-between;font-size:.9rem;padding:8px 0;border-bottom:1px dashed rgba(169,183,201,.2)}
+.stat span:first-child{color:var(--muted)}
+.stat .ok{color:#4ade80;font-weight:700}
+.progress-label{display:flex;justify-content:space-between;margin-top:16px;font-size:.85rem}
+.progress-label b{color:var(--gold)}
+.progress{height:10px;border-radius:99px;background:rgba(7,20,38,.8);border:1px solid var(--line);overflow:hidden;margin-top:6px}
+.progress i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--cyan),var(--gold));transition:width 1s var(--ease);box-shadow:0 0 12px var(--cyan)}
+.pips{display:flex;gap:6px;margin-top:10px}
+.pips span{flex:1;height:6px;border-radius:4px;background:rgba(169,183,201,.18)}
+.pips span.on{background:var(--gold)}
+.pips span.open{background:var(--cyan)}
+.legend{margin-top:10px;font-size:.75rem;color:var(--muted);display:flex;gap:14px;flex-wrap:wrap}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.curriculum{margin-top:18px;font-size:.78rem;color:var(--muted);line-height:1.5;border-top:1px solid var(--line);padding-top:12px}
+.curriculum b{color:var(--white)}
+
+.missions{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px}
+.mission{
+  text-align:left;color:var(--white);padding:20px;display:flex;flex-direction:column;gap:10px;min-height:210px;
+  border-radius:var(--radius);border:1px solid var(--line);
+  background:linear-gradient(160deg,rgba(16,35,61,.95),rgba(7,20,38,.9));
+  position:relative;overflow:hidden;
+  transition:transform .3s var(--ease),border-color .3s,box-shadow .3s;
+  opacity:0;transform:translateY(20px);
+}
+.screen.active .mission{animation:cardIn .6s var(--ease) forwards}
+.screen.active .mission:nth-child(2){animation-delay:.08s}
+.screen.active .mission:nth-child(3){animation-delay:.16s}
+.screen.active .mission:nth-child(4){animation-delay:.24s}
+.screen.active .mission:nth-child(5){animation-delay:.32s}
+.mission::before{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(120deg,transparent 40%,rgba(83,216,232,.12) 50%,transparent 60%);
+  transform:translateX(-100%);transition:transform .7s var(--ease);
+}
+.mission:hover,.mission:focus-visible{border-color:var(--gold);box-shadow:0 14px 40px rgba(0,0,0,.4),0 0 24px rgba(214,173,85,.25);translate:0 -6px}
+.mission:hover::before{transform:translateX(100%)}
+.mission .m-top{display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between;align-items:center}
+.m-num{font:800 .74rem var(--font-display);letter-spacing:.2em;color:var(--cyan)}
+.m-state{font:700 .62rem var(--font-display);letter-spacing:.14em;padding:4px 8px;border-radius:6px}
+.m-state.open{color:var(--bg);background:var(--cyan)}
+.m-state.lock{color:var(--muted);border:1px solid rgba(169,183,201,.4)}
+.m-state.done{color:#1a1205;background:var(--gold)}
+.m-icon{width:52px;height:52px;border-radius:14px;display:grid;place-items:center;background:rgba(214,173,85,.1);border:1px solid rgba(214,173,85,.35)}
+.m-icon svg{width:28px;height:28px;stroke:var(--gold);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.mission h3{font:800 1rem var(--font-display);letter-spacing:.06em;color:var(--gold);line-height:1.3}
+.mission p{font-size:.92rem;color:var(--muted)}
+.m-cta{margin-top:auto;font:700 .7rem var(--font-display);letter-spacing:.16em;color:var(--cyan)}
+
+/* =========================================================
+   10. MODAL TAKLIMAT MISI
+   ========================================================= */
+.modal{
+  position:fixed;inset:0;z-index:60;display:grid;place-items:center;padding:16px;
+  background:rgba(3,10,20,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  opacity:0;visibility:hidden;transition:opacity .3s ease,visibility 0s linear .3s;
+}
+.modal.open{opacity:1;visibility:visible;transition:opacity .3s ease}
+.modal-box{
+  width:100%;max-width:520px;padding:30px 26px 26px;max-height:calc(100dvh - 32px);overflow:auto;
+  transform:translateY(24px) scale(.96);transition:transform .4s var(--ease);
+}
+.modal.open .modal-box{transform:none}
+.modal-close{
+  position:absolute;top:12px;right:12px;width:44px;height:44px;border-radius:50%;
+  border:1px solid var(--line);background:rgba(7,20,38,.7);color:var(--white);font-size:1.4rem;line-height:1;
+}
+.modal-close:hover{border-color:var(--gold);color:var(--gold)}
+.modal-box .m-icon{margin-bottom:14px}
+.modal-box h2{font:800 clamp(1.15rem,3.5vw,1.45rem) var(--font-display);color:var(--gold);letter-spacing:.06em;line-height:1.25;padding-right:40px}
+.modal-desc{margin-top:10px;color:var(--white)}
+.modal-status{margin-top:18px;padding:12px 14px;border-radius:10px;display:flex;justify-content:space-between;gap:10px;align-items:center;background:rgba(7,20,38,.6);border:1px solid var(--line);font-size:.9rem}
+.modal-status span{color:var(--muted)}
+.notice{
+  margin-top:16px;padding:14px;border-radius:10px;text-align:center;
+  border:1px dashed var(--gold);color:var(--gold);font:700 .8rem var(--font-display);letter-spacing:.08em;line-height:1.5;
+}
+.notice[hidden]{display:none}
+
+/* =========================================================
+   11. RESPONSIF
+   ========================================================= */
+@media (max-width:1024px){
+  .mc-layout{grid-template-columns:1fr}
+  .status-panel{display:grid;grid-template-columns:1fr 1fr;gap:6px 24px}
+  .status-panel h3,.agent-id,.curriculum{grid-column:1/-1}
+}
+@media (max-width:768px){
+  .agent-wrap{grid-template-columns:1fr}
+  .agent-stage{height:300px}
+  .agent{transform-origin:bottom center}
+  .typed{min-height:240px}
+  .mc-top{flex-direction:column;align-items:flex-start}
+}
+@media (max-width:640px){
+  .team-grid{grid-template-columns:1fr;max-width:420px}
+  .status-panel{display:block}
+  .dossier-head{padding-right:0;padding-top:30px}
+  .stamp{top:12px;right:12px}
+  .btn-row .btn{flex:1 1 auto}
+  .info div{flex-direction:column;gap:0}
+  .info dd{text-align:left}
+}
+@media (max-width:420px){
+  .screen{padding:24px 16px 32px}
+  .btn{padding:12px 18px;letter-spacing:.1em}
+  .mc-actions{width:100%}
+  .mc-actions .btn{flex:1}
+}
+
+/* =========================================================
+   12. KURANGKAN GERAKAN (prefers-reduced-motion)
+   ========================================================= */
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms !important;animation-iteration-count:1 !important;animation-delay:0s !important;transition-duration:.001ms !important}
+  .bg-scan::before{display:none}
+  .intro-title{background-position:0 0}
+}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+</style>
+</head>
+<body>
+
+<!-- ============ LAPISAN LATAR BELAKANG ============ -->
+<div class="bg-layer bg-gradient" aria-hidden="true"></div>
+<div class="bg-layer bg-grid" aria-hidden="true"></div>
+<canvas id="particles" aria-hidden="true"></canvas>
+<div class="bg-layer bg-scan" aria-hidden="true"></div>
+<div class="curtain" id="curtain" aria-hidden="true"></div>
+
+<main class="app" id="app">
+
+  <!-- ===================================================
+       SKRIN 01 – INTRO SINEMATIK
+       =================================================== -->
+  <section class="screen active" id="s1" data-screen="1" aria-label="Intro">
+    <div class="container">
+      <div class="logo" aria-hidden="true">
+        <svg viewBox="0 0 120 120">
+          <g class="ring">
+            <circle cx="60" cy="60" r="54" fill="none" stroke="#53D8E8" stroke-width="1.5" stroke-dasharray="6 8"/>
+          </g>
+          <circle cx="60" cy="60" r="44" fill="#10233D" stroke="#D6AD55" stroke-width="2.5"/>
+          <path d="M60 26 L84 36 V58 C84 74 73 86 60 92 C47 86 36 74 36 58 V36 Z" fill="none" stroke="#D6AD55" stroke-width="2.5"/>
+          <path d="M60 44 l4.7 9.6 10.6 1.5-7.7 7.5 1.8 10.5L60 68.2l-9.4 4.9 1.8-10.5-7.7-7.5 10.6-1.5z" fill="#53D8E8"/>
+        </svg>
+      </div>
+      <h1 class="intro-title">AGENT HISTORY<br>ACADEMY</h1>
+      <p class="intro-mission">MISI JEJAK PERDANA MENTERI MALAYSIA</p>
+      <span class="intro-tag">SEJARAH TAHUN 6</span>
+      <p class="intro-quote">"Sejarah negara bermula dengan kepimpinan. Kini, tiba masanya untuk kamu meneroka sejarah pemimpin negara Malaysia."</p>
+      <div class="btn-row">
+        <button class="btn btn-gold btn-lg btn-start" data-go="2">Start Mission</button>
+      </div>
+      <p class="intro-foot">SJHK 25/29 · TEKNOLOGI UNTUK PENGAJARAN DAN PEMBELAJARAN</p>
+    </div>
+  </section>
+
+  <!-- ===================================================
+       SKRIN 02 – TAKLIMAT MISI SULIT
+       =================================================== -->
+  <section class="screen" id="s2" data-screen="2" aria-label="Taklimat misi">
+    <div class="container">
+      <article class="panel hud dossier">
+        <div class="scanbar" aria-hidden="true"></div>
+        <span class="stamp">SULIT</span>
+        <header class="dossier-head">
+          <span class="eyebrow">Fail Misi · AHA-06</span>
+          <h2 class="heading">CLASSIFIED MISSION BRIEFING</h2>
+          <span class="file-meta">Arkib Sejarah Negara · Tahap Akses: Ejen Pelatih</span>
+        </header>
+        <div class="story">
+          <p>Perhatian, Ejen!</p>
+          <p>Sebuah arkib sejarah negara memerlukan bantuan kamu.</p>
+          <p>Maklumat tentang Perdana Menteri Malaysia perlu diterokai, dikenal pasti dan disusun mengikut kronologi.</p>
+          <p>Kamu telah dipilih untuk menyelesaikan misi penting ini.</p>
+          <p>Sepanjang pengembaraan, kamu akan mengenali pemimpin negara, meneroka biodata mereka dan memahami jasa serta sumbangan mereka kepada Malaysia.</p>
+          <p class="ask">Bersedia untuk menerima tugasan?</p>
+        </div>
+        <div class="objectives">
+          <h3>OBJEKTIF PEMBELAJARAN</h3>
+          <div class="obj"><span class="obj-num">1</span><span>Mengenali nama dan biodata ringkas Perdana Menteri Malaysia.</span></div>
+          <div class="obj"><span class="obj-num">2</span><span>Menelusuri susunan Perdana Menteri mengikut kronologi.</span></div>
+          <div class="obj"><span class="obj-num">3</span><span>Menyatakan penghargaan terhadap Perdana Menteri.</span></div>
+        </div>
+      </article>
+      <div class="btn-row">
+        <button class="btn btn-ghost" data-go="1">Back</button>
+        <button class="btn btn-gold" data-go="3">Next</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================================================
+       SKRIN 03 – KENALI EJEN KAMU
+       =================================================== -->
+  <section class="screen" id="s3" data-screen="3" aria-label="Kenali ejen kamu">
+    <div class="container">
+      <div style="text-align:center;margin-bottom:24px">
+        <span class="eyebrow">Pembimbing Misi</span>
+        <h2 class="heading">MEET YOUR AGENT</h2>
+      </div>
+      <div class="agent-wrap">
+        <!-- Maskot ejen asal, dilukis sepenuhnya dengan CSS -->
+        <div class="agent-stage" aria-hidden="true">
+          <div class="holo-beam"></div>
+          <div class="holo-base"></div>
+          <div class="agent">
+            <div class="arm l"></div>
+            <div class="body"><div class="shirt"></div><div class="tie"></div><div class="badge">S</div></div>
+            <div class="arm r"></div>
+            <div class="head"></div>
+            <div class="hat-top"></div><div class="hat-brim"></div><div class="hat-band"></div>
+            <div class="glasses"><div class="lens"></div><div class="bridge"></div><div class="lens"></div></div>
+            <div class="cheek l"></div><div class="cheek r"></div>
+            <div class="smile"></div>
+            <div class="legs"><span></span><span></span></div>
+          </div>
+          <span class="agent-name">EJEN SEJARAH</span>
+        </div>
+        <div class="panel hud dialogue">
+          <div class="who"><span class="dot-live"></span><b>EJEN SEJARAH</b></div>
+          <p class="typed" id="typed" aria-live="polite"></p>
+          <p class="type-hint" id="typeHint">Klik pada kotak dialog untuk paparkan semua teks.</p>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-ghost" data-go="2">Back</button>
+        <button class="btn btn-gold" data-go="4">Next</button>
+        <button class="btn" data-go="5">Skip Intro</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================================================
+       SKRIN 04 – PASUKAN PROJEK
+       =================================================== -->
+  <section class="screen" id="s4" data-screen="4" aria-label="Pasukan projek">
+    <div class="container">
+      <header class="team-head">
+        <span class="eyebrow">Mission Team</span>
+        <h2 class="heading">MEET THE PROJECT TEAM</h2>
+        <p class="sub">"Individu di sebalik pembangunan Agent History Academy."</p>
+      </header>
+
+      <div class="team-grid">
+        <!-- KAD PROFIL 1: PENSYARAH -->
+        <article class="panel hud profile">
+          <span class="role-chip">PENSYARAH KURSUS</span>
+          <div class="photo-frame lecturer">
+            <img src="assets/lecturer.jpg" alt="Foto Ts. Yefrizal bin Nadzir, pensyarah kursus" width="268" height="335" loading="eager">
+            <div class="img-fallback">Foto tidak ditemui: assets/lecturer.jpg</div>
+            <div class="glint" aria-hidden="true"></div>
+          </div>
+          <h3>Ts. Yefrizal bin Nadzir</h3>
+          <p class="role">PENSYARAH KURSUS</p>
+          <dl class="info">
+            <div><dt>Kursus</dt><dd>Teknologi untuk Pengajaran dan Pembelajaran</dd></div>
+          </dl>
+        </article>
+
+        <!-- KAD PROFIL 2: GURU / PEMBANGUN PROJEK -->
+        <article class="panel hud profile">
+          <span class="role-chip">GURU / PEMBANGUN PROJEK</span>
+          <div class="photo-frame teacher">
+            <img src="assets/teacher.jpg" alt="Foto Maria Ulfa binti Morshid, guru dan pembangun projek" width="750" height="1000" loading="eager">
+            <div class="img-fallback">Foto tidak ditemui: assets/teacher.jpg</div>
+            <div class="glint" aria-hidden="true"></div>
+          </div>
+          <h3>Maria Ulfa binti Morshid</h3>
+          <p class="role">GURU / PEMBANGUN PROJEK</p>
+          <dl class="info">
+            <div><dt>Unit</dt><dd>SJHK 25/29</dd></div>
+            <div><dt>A. Giliran</dt><dd>2025152440267</dd></div>
+          </dl>
+        </article>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-ghost" data-back-team>Back</button>
+        <button class="btn btn-gold" data-go="5">Next</button>
+        <button class="btn" data-go="5">Skip to Mission Control</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================================================
+       SKRIN 05 – PUSAT KAWALAN MISI
+       =================================================== -->
+  <section class="screen" id="s5" data-screen="5" aria-label="Mission Control">
+    <div class="container">
+      <div class="mc-top">
+        <div>
+          <span class="eyebrow">Ibu Pejabat Ejen</span>
+          <h2 class="heading">MISSION CONTROL</h2>
+          <p class="sub">"Pilih misi kamu, Ejen!"</p>
+        </div>
+        <div class="mc-actions">
+          <button class="btn" data-go="4">Project Team</button>
+          <button class="btn btn-ghost" data-go="1">Return Home</button>
+        </div>
+      </div>
+
+      <div class="mc-layout">
+        <!-- Panel status ejen + penunjuk kemajuan -->
+        <aside class="panel hud status-panel" aria-label="Status ejen">
+          <h3>STATUS EJEN</h3>
+          <div class="agent-id">
+            <div class="agent-avatar" aria-hidden="true"></div>
+            <div><b>EJEN PELATIH</b><small>Kod: AHA-06</small></div>
+          </div>
+          <div class="stat"><span>Status</span><span class="ok">● AKTIF</span></div>
+          <div class="stat"><span>Misi dibuka</span><span id="statOpen">1 / 5</span></div>
+          <div class="stat"><span>Misi selesai</span><span id="statDone">0 / 5</span></div>
+          <div>
+            <div class="progress-label"><span>Kemajuan Misi</span><b id="progressPct">0%</b></div>
+            <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progressBar"><i id="progressFill"></i></div>
+            <div class="pips" id="pips" aria-hidden="true"></div>
+            <div class="legend"><span><i style="background:var(--gold)"></i>Selesai</span><span><i style="background:var(--cyan)"></i>Dibuka</span><span><i style="background:rgba(169,183,201,.3)"></i>Belum dibuka</span></div>
+          </div>
+          <p class="curriculum"><b>Sejarah Tahun 6</b> · Tema: Kemakmuran Negara Kita · Tajuk 12: Pencapaian dan Kebanggaan Negara · SK 12.3 Pemimpin Negara · SP 12.3.3 &amp; K12.3.6 · Buku Teks Unit 7</p>
+        </aside>
+
+        <!-- Kad misi dijana oleh JavaScript -->
+        <div class="missions" id="missions"></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- ============ MODAL TAKLIMAT MISI ============ -->
+<div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" aria-hidden="true">
+  <div class="panel hud modal-box">
+    <button class="modal-close" id="modalClose" aria-label="Tutup">×</button>
+    <div class="m-icon" id="modalIcon"></div>
+    <span class="eyebrow" id="modalNum"></span>
+    <h2 id="modalTitle"></h2>
+    <p class="modal-desc" id="modalDesc"></p>
+    <div class="modal-status"><span>Status Misi</span><b id="modalStatus"></b></div>
+    <p class="notice" id="modalNotice" hidden>MISI INI AKAN DIBUKA DALAM FASA PEMBANGUNAN SETERUSNYA.</p>
+    <div class="btn-row">
+      <button class="btn btn-ghost" id="modalCancel">Close</button>
+      <button class="btn btn-gold" id="modalStart">Start</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   AGENT HISTORY ACADEMY – v2.0
+   Semua logik aplikasi (tanpa backend, tanpa framework).
+   ========================================================= */
+(function(){
+  'use strict';
+
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var TRANSITION_MS = reduceMotion ? 50 : 650;
+
+  /* ---------------------------------------------------------
+     1. DATA MISI
+     available: true  = modul wujud dan boleh dimainkan
+     available: false = belum dibangunkan (jujur kepada murid)
+     --------------------------------------------------------- */
+  var ICONS = {
+    command:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2"/><path d="M12 1v4M12 19v4M1 12h4M19 12h4"/></svg>',
+    archive:'<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="5" rx="1"/><path d="M5 9v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9"/><path d="M10 13h4"/></svg>',
+    timeline:'<svg viewBox="0 0 24 24"><path d="M3 12h18"/><circle cx="6" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="18" cy="12" r="2"/><path d="M6 10V6M12 14v4M18 10V6"/></svg>',
+    gallery:'<svg viewBox="0 0 24 24"><path d="M12 3l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.4 6.8 19.1l1-5.8L3.5 9.2l5.9-.9z"/></svg>',
+    challenge:'<svg viewBox="0 0 24 24"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3a3 3 0 0 1-3 4M7 5H4a3 3 0 0 0 3 4"/></svg>'
+  };
+
+  var MISSIONS = [
+    { id:1, title:'PUSAT ARAHAN', icon:'command', available:true,
+      desc:'Kenali objektif dan arahan pengembaraan Ejen Sejarah.',
+      // Misi 01 menggunakan skrin Taklimat Misi (Skrin 02) yang sudah dibina.
+      start:function(){ closeModal(); markDone(1); goTo(2); } },
+    { id:2, title:'ARKIB PEMIMPIN', icon:'archive', available:false,
+      desc:'Terokai biodata dan sejarah 10 kedudukan Perdana Menteri Malaysia.' },
+    { id:3, title:'JEJAK KRONOLOGI', icon:'timeline', available:false,
+      desc:'Susun Perdana Menteri Malaysia mengikut urutan yang betul.' },
+    { id:4, title:'GALERI PENGHARGAAN', icon:'gallery', available:false,
+      desc:'Kenali jasa pemimpin dan nyatakan penghargaan terhadap mereka.' },
+    { id:5, title:'CABARAN AKHIR', icon:'challenge', available:false,
+      desc:'Uji pengetahuan sejarah melalui cabaran interaktif.' }
+  ];
+
+  /* Kemajuan disimpan dalam pelayar (jika dibenarkan) */
+  var STORE_KEY = 'aha_v2_done';
+  var done = loadDone();
+  function loadDone(){
+    try { var v = JSON.parse(localStorage.getItem(STORE_KEY)); return Array.isArray(v) ? v : []; }
+    catch(e){ return []; }
+  }
+  function saveDone(){ try { localStorage.setItem(STORE_KEY, JSON.stringify(done)); } catch(e){} }
+  function markDone(id){ if(done.indexOf(id) === -1){ done.push(id); saveDone(); } renderMissions(); }
+
+  /* ---------------------------------------------------------
+     2. SISTEM NAVIGASI SKRIN (berpusat)
+     --------------------------------------------------------- */
+  var current = 1;
+  var previous = 1;        // skrin sebelum skrin semasa
+  var teamCameFrom = 3;    // BACK di Skrin 04 kembali ke sumber (Skrin 03 atau Mission Control)
+  var busy = false;        // halang klik berganda semasa peralihan
+  var curtain = document.getElementById('curtain');
+
+  function goTo(n){
+    n = Number(n);
+    if(busy || n === current || !document.getElementById('s' + n)) return;
+    busy = true;
+    if(n === 4) teamCameFrom = (current === 5) ? 5 : 3;
+
+    var from = document.getElementById('s' + current);
+    var to   = document.getElementById('s' + n);
+    if(!reduceMotion) curtain.classList.add('show');
+
+    setTimeout(function(){
+      from.classList.remove('active');
+      from.setAttribute('aria-hidden','true');
+      to.classList.add('active');
+      to.removeAttribute('aria-hidden');
+      previous = current; current = n;
+      window.scrollTo(0,0);
+      curtain.classList.remove('show');
+      onEnter(n);
+      // fokus pada tajuk skrin untuk pengguna papan kekunci / pembaca skrin
+      var h = to.querySelector('h1,h2');
+      if(h){ h.setAttribute('tabindex','-1'); h.focus({preventScroll:true}); }
+      setTimeout(function(){ busy = false; }, TRANSITION_MS);
+    }, reduceMotion ? 0 : 300);
+  }
+
+  function onEnter(n){
+    if(n === 3) startTyping(); else stopTyping();
+    if(n === 5) renderMissions();
+  }
+
+  // Semua butang dengan data-go="N"
+  document.addEventListener('click', function(e){
+    var b = e.target.closest('[data-go]');
+    if(b){ goTo(b.getAttribute('data-go')); return; }
+    if(e.target.closest('[data-back-team]')){ goTo(teamCameFrom); }
+  });
+
+  // Tetapkan aria-hidden awal
+  document.querySelectorAll('.screen').forEach(function(s){ if(!s.classList.contains('active')) s.setAttribute('aria-hidden','true'); });
+
+  /* ---------------------------------------------------------
+     3. ANIMASI MENAIP DIALOG EJEN (Skrin 03)
+     --------------------------------------------------------- */
+  var DIALOGUE = 'Salam, Ejen!\n\nSaya akan menjadi pembimbing kamu sepanjang misi ini.\n\nKita akan meneroka sejarah kepimpinan negara, mengenali Perdana Menteri Malaysia dan menyelesaikan cabaran yang telah disediakan.\n\nIngat, setiap fakta sejarah mempunyai cerita. Setiap pemimpin mempunyai sumbangan.\n\nAyuh, kita mulakan pengembaraan!';
+  var typedEl = document.getElementById('typed');
+  var typeHint = document.getElementById('typeHint');
+  var typeTimer = null, typeIdx = 0;
+
+  function startTyping(){
+    stopTyping();
+    if(reduceMotion){ finishTyping(); return; }
+    typeIdx = 0; typedEl.textContent = ''; typedEl.classList.add('typing'); typeHint.hidden = false;
+    setTimeout(function tick(){
+      if(current !== 3) return;
+      typeIdx++;
+      typedEl.textContent = DIALOGUE.slice(0, typeIdx);
+      if(typeIdx < DIALOGUE.length){
+        var ch = DIALOGUE.charAt(typeIdx - 1);
+        typeTimer = setTimeout(tick, ch === '\n' ? 160 : (/[.,!]/.test(ch) ? 120 : 22));
+      } else finishTyping();
+    }, 600);
+  }
+  function finishTyping(){
+    stopTyping();
+    typedEl.textContent = DIALOGUE; typedEl.classList.remove('typing'); typeHint.hidden = true;
+  }
+  function stopTyping(){ clearTimeout(typeTimer); typeTimer = null; }
+  document.querySelector('.dialogue').addEventListener('click', finishTyping);
+
+  /* ---------------------------------------------------------
+     4. KAD MISI + PANEL STATUS (Skrin 05)
+     --------------------------------------------------------- */
+  var missionsEl = document.getElementById('missions');
+
+  function stateOf(m){
+    if(done.indexOf(m.id) !== -1) return {cls:'done', label:'SELESAI'};
+    if(m.available) return {cls:'open', label:'DIBUKA'};
+    return {cls:'lock', label:'AKAN DATANG'};
+  }
+
+  function renderMissions(){
+    missionsEl.innerHTML = '';
+    MISSIONS.forEach(function(m){
+      var st = stateOf(m);
+      var card = document.createElement('button');
+      card.type = 'button';
+      card.className = 'mission';
+      card.setAttribute('aria-label','Misi ' + pad(m.id) + ': ' + m.title + ' (' + st.label + ')');
+      card.innerHTML =
+        '<div class="m-top"><span class="m-num">MISSION ' + pad(m.id) + '</span><span class="m-state ' + st.cls + '">' + st.label + '</span></div>' +
+        '<div class="m-icon" aria-hidden="true">' + ICONS[m.icon] + '</div>' +
+        '<h3>' + m.title + '</h3><p>' + m.desc + '</p>' +
+        '<span class="m-cta">LIHAT TAKLIMAT →</span>';
+      card.addEventListener('click', function(){ openModal(m, card); });
+      missionsEl.appendChild(card);
+    });
+
+    var openCount = MISSIONS.filter(function(m){ return m.available; }).length;
+    var pct = Math.round(done.length / MISSIONS.length * 100);
+    document.getElementById('statOpen').textContent = openCount + ' / ' + MISSIONS.length;
+    document.getElementById('statDone').textContent = done.length + ' / ' + MISSIONS.length;
+    document.getElementById('progressPct').textContent = pct + '%';
+    document.getElementById('progressFill').style.width = pct + '%';
+    document.getElementById('progressBar').setAttribute('aria-valuenow', pct);
+    document.getElementById('pips').innerHTML = MISSIONS.map(function(m){
+      return '<span class="' + (done.indexOf(m.id) !== -1 ? 'on' : (m.available ? 'open' : '')) + '"></span>';
+    }).join('');
+  }
+  function pad(n){ return (n < 10 ? '0' : '') + n; }
+
+  /* ---------------------------------------------------------
+     5. MODAL TAKLIMAT MISI
+     --------------------------------------------------------- */
+  var modal = document.getElementById('modal');
+  var modalStart = document.getElementById('modalStart');
+  var activeMission = null, lastFocus = null;
+
+  function openModal(m, trigger){
+    activeMission = m; lastFocus = trigger || null;
+    var st = stateOf(m);
+    document.getElementById('modalIcon').innerHTML = ICONS[m.icon];
+    document.getElementById('modalNum').textContent = 'MISSION ' + pad(m.id);
+    document.getElementById('modalTitle').textContent = m.title;
+    document.getElementById('modalDesc').textContent = m.desc;
+    document.getElementById('modalStatus').textContent = st.label;
+    document.getElementById('modalNotice').hidden = m.available;
+    // Misi belum dibangunkan: butang START dinyahaktifkan, bukan berpura-pura berfungsi
+    modalStart.disabled = !m.available;
+    modalStart.textContent = m.available ? 'Start' : 'Belum Dibuka';
+    modalStart.style.opacity = m.available ? '' : '.45';
+    modalStart.style.cursor = m.available ? '' : 'not-allowed';
+    modal.classList.add('open');
+    modal.setAttribute('aria-hidden','false');
+    setTimeout(function(){ document.getElementById('modalClose').focus(); }, 50);
+  }
+  function closeModal(){
+    if(!modal.classList.contains('open')) return;
+    modal.classList.remove('open');
+    modal.setAttribute('aria-hidden','true');
+    if(lastFocus && document.body.contains(lastFocus)) lastFocus.focus();
+  }
+  modalStart.addEventListener('click', function(){ if(activeMission && activeMission.available) activeMission.start(); });
+  document.getElementById('modalClose').addEventListener('click', closeModal);
+  document.getElementById('modalCancel').addEventListener('click', closeModal);
+  modal.addEventListener('click', function(e){ if(e.target === modal) closeModal(); });
+  document.addEventListener('keydown', function(e){ if(e.key === 'Escape') closeModal(); });
+
+  /* ---------------------------------------------------------
+     6. FOTO: paparan sandaran jika fail tiada
+     --------------------------------------------------------- */
+  document.querySelectorAll('.photo-frame img').forEach(function(img){
+    function broken(){ img.parentNode.classList.add('broken'); }
+    img.addEventListener('error', broken);
+    if(img.complete && img.naturalWidth === 0) broken();
+  });
+
+  /* ---------------------------------------------------------
+     7. ZARAH DIGITAL LATAR BELAKANG (ringan)
+     --------------------------------------------------------- */
+  var cv = document.getElementById('particles'), ctx = cv.getContext('2d');
+  var parts = [], W = 0, H = 0, DPR = Math.min(window.devicePixelRatio || 1, 2);
+  function resize(){
+    W = window.innerWidth; H = window.innerHeight;
+    cv.width = W * DPR; cv.height = H * DPR; cv.style.width = W + 'px'; cv.style.height = H + 'px';
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+    var count = Math.min(70, Math.round(W * H / 22000));
+    parts = [];
+    for(var i = 0; i < count; i++){
+      parts.push({ x:Math.random()*W, y:Math.random()*H, r:Math.random()*1.6+.4,
+        vy:-(Math.random()*.25+.05), vx:(Math.random()-.5)*.12,
+        a:Math.random()*.6+.2, gold:Math.random() < .25 });
+    }
+    if(reduceMotion) draw(false);
+  }
+  function draw(move){
+    ctx.clearRect(0,0,W,H);
+    for(var i = 0; i < parts.length; i++){
+      var p = parts[i];
+      if(move){ p.x += p.vx; p.y += p.vy; if(p.y < -5){ p.y = H + 5; p.x = Math.random()*W; } }
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fillStyle = p.gold ? 'rgba(214,173,85,' + p.a + ')' : 'rgba(83,216,232,' + p.a + ')';
+      ctx.fill();
+    }
+  }
+  function loop(){ if(!document.hidden) draw(true); requestAnimationFrame(loop); }
+  window.addEventListener('resize', resize);
+  resize();
+  if(!reduceMotion) requestAnimationFrame(loop);
+
+  renderMissions();
+})();
+</script>
+</body>
+</html>
