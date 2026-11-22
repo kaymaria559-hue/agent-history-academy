@@ -786,6 +786,9 @@ button{font:inherit;cursor:pointer}
   /* URL penuh Modul 04 – Galeri Penghargaan (Google Sites) */
   var MODULE04_URL = 'https://sites.google.com/moe-dl.edu.my/ejen-akademi-sejarah/galeri-penghargaan';
 
+  /* URL penuh Modul 05 – Cabaran Akhir / Final Mission (Google Sites) */
+  var MODULE05_URL = 'https://sites.google.com/moe-dl.edu.my/ejen-akademi-sejarah/cabaran-akhir';
+
   /* ---------------------------------------------------------
      1. DATA MISI
      available: true  = modul wujud dan boleh dimainkan
@@ -817,8 +820,10 @@ button{font:inherit;cursor:pointer}
       desc:'Kenali jasa pemimpin dan nyatakan penghargaan terhadap mereka.',
       // Modul 04 di Google Sites, dibuka dalam tab baharu terus daripada klik murid.
       start:function(){ window.open(MODULE04_URL, '_blank', 'noopener'); closeModal(); } },
-    { id:5, title:'CABARAN AKHIR', icon:'challenge', available:false,
-      desc:'Uji pengetahuan sejarah melalui cabaran interaktif.' }
+    { id:5, title:'CABARAN AKHIR', icon:'challenge', available:true,
+      desc:'Uji pengetahuan sejarah melalui cabaran interaktif.',
+      // Modul 05 di Google Sites, dibuka dalam tab baharu terus daripada klik murid.
+      start:function(){ window.open(MODULE05_URL, '_blank', 'noopener'); closeModal(); } }
   ];
 
   /* Kemajuan disimpan dalam pelayar (jika dibenarkan) */
