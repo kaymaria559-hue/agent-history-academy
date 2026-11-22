@@ -282,6 +282,30 @@ select:focus,textarea:focus{outline:none;border-color:var(--cyan);box-shadow:0 0
 /* =========================================================
    12. KURANGKAN GERAKAN
    ========================================================= */
+/* ---------- Kawalan bunyi ---------- */
+.snd{position:fixed;top:12px;right:12px;z-index:85;display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.snd-btn{width:46px;height:46px;border-radius:50%;border:1.5px solid rgba(169,183,201,.5);background:rgba(16,35,61,.92);color:var(--muted);display:grid;place-items:center;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.35);transition:border-color .2s,color .2s,box-shadow .2s}
+.snd-btn svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.snd-btn.on{border-color:var(--cyan);color:var(--cyan);box-shadow:0 0 18px rgba(83,216,232,.45)}
+.snd-panel{width:240px;padding:14px;border-radius:14px;background:rgba(16,35,61,.98);border:1px solid var(--gold);box-shadow:0 16px 40px rgba(0,0,0,.5);color:var(--white)}
+.snd-panel[hidden]{display:none}
+.snd-panel .ttl{font:600 .66rem var(--font-display);letter-spacing:.2em;color:var(--gold);margin-bottom:10px}
+.snd-panel .row{display:flex;gap:8px}
+.snd-panel .btn{flex:1;min-height:38px;padding:6px 8px;font-size:.6rem;letter-spacing:.08em}
+.snd-panel .btn[aria-pressed="true"]{background:var(--cyan);border-color:var(--cyan);color:var(--bg)}
+.snd-panel label{display:flex;justify-content:space-between;font:600 .62rem var(--font-display);letter-spacing:.14em;color:var(--muted);margin:14px 0 6px}
+.snd-panel input[type=range]{width:100%;accent-color:var(--gold);height:28px}
+.snd-panel .note{font-size:.74rem;color:var(--muted);margin-top:8px;line-height:1.4}
+@media (max-width:1340px){ .topbar{padding-right:58px} }
+@media (max-width:1000px){
+  .modal{padding-top:68px}
+  .modal-box{max-height:calc(100dvh - 84px)}
+}
+@media (max-width:900px){
+  .screen,.screen.top{padding-top:72px}
+  .topbar{padding-right:0}
+}
+
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;animation-delay:0s!important;transition-duration:.001ms!important}
   .bg-scan::before{display:none}
@@ -466,6 +490,21 @@ select:focus,textarea:focus{outline:none;border-color:var(--cyan);box-shadow:0 0
     </div>
   </section>
 </main>
+
+<!-- ================= KAWALAN BUNYI ================= -->
+<div class="snd" id="snd">
+  <button class="snd-btn" type="button" id="sndBtn" aria-expanded="false" aria-controls="sndPanel" aria-label="Tetapan bunyi (bunyi dimatikan)"></button>
+  <div class="snd-panel" id="sndPanel" role="group" aria-label="Tetapan bunyi" hidden>
+    <div class="ttl">BUNYI</div>
+    <div class="row">
+      <button class="btn" type="button" id="sndOn" aria-pressed="false">Sound On</button>
+      <button class="btn" type="button" id="sndOff" aria-pressed="true">Sound Off</button>
+    </div>
+    <label for="sndVol"><span>VOLUME</span><span id="sndVolTxt">100%</span></label>
+    <input type="range" id="sndVol" min="0" max="100" step="1" value="100">
+    <p class="note" id="sndNote">Bunyi berhenti apabila kamu meninggalkan modul ini atau membuka halaman lain.</p>
+  </div>
+</div>
 
 <!-- ================= MODAL KAD JASA ================= -->
 <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="jvName" aria-hidden="true">
@@ -761,6 +800,7 @@ var PHRASES = [
     }
     setTimeout(function(){ $('modalClose').focus(); }, 30);
     if(S.seen.indexOf(p.no) === -1){ S.seen.push(p.no); updateGalleryStat(); }
+    sndCardOpened();
   }
   function closeCard(){
     if(!modal.classList.contains('open')) return;
@@ -828,6 +868,7 @@ var PHRASES = [
       if(no === q.a) b.classList.add('correct'); else if(no === S.picked) b.classList.add('wrong');
     });
     if(ok) S.right++; else S.wrong++;
+    sfx(ok ? 'correct' : 'wrong');
     S.answers[S.qi] = ok;
     var fb = $('fb');
     fb.className = 'feedback show ' + (ok ? 'ok' : 'no');
@@ -882,6 +923,7 @@ var PHRASES = [
     var extra = S.chips.length ? '' : ' Kamu juga boleh memilih ungkapan di bahagian A untuk melengkapkan kad ini.';
     $('pPraise').textContent = PRAISE[Math.floor(Math.random() * PRAISE.length)] + extra;
     $('posted').classList.add('show');
+    sfx('send');
     $('toZ4').disabled = false;
     renderZonebars();
     $('posted').scrollIntoView({behavior: reduceMotion ? 'auto' : 'smooth', block:'center'});
@@ -909,6 +951,7 @@ var PHRASES = [
     $('rRight').textContent = S.right;
     $('rWrong').textContent = S.wrong;
     $('rStatus').textContent = 'MISI SELESAI';
+    sndMissionComplete(lv);
     document.querySelectorAll('#levels [data-lv]').forEach(function(d){ d.classList.toggle('me', +d.getAttribute('data-lv') === lv); });
   }
   function resetAll(){
@@ -939,6 +982,253 @@ var PHRASES = [
   function loop(){ if(!document.hidden) draw(true); requestAnimationFrame(loop); }
   addEventListener('resize', resize); resize();
   if(!reduceMotion) requestAnimationFrame(loop);
+
+  /* =========================================================
+     SISTEM BUNYI (Web Audio API – tiada fail luaran)
+     Gaya sama seperti Modul 01, 02 dan 03. Bermula OFF; murid menekan SOUND ON.
+     Muzik berhenti apabila murid meninggalkan modul atau membuka halaman lain.
+     ========================================================= */
+  var SOUND = {
+    levels: { music:0.38, click:0.60, open:0.72, card:0.65, swipe:0.55, reveal:0.60, select:0.55, correct:0.70, wrong:0.60, send:0.70, complete:0.75, badge:0.75 }, // pada volume 100%
+    defaultVolume: 100
+  };
+  var NORM = { music:3.5, click:13.5, open:4.07, card:14.2, swipe:17.2, reveal:10.7,
+               select:10.6, correct:5.85, wrong:6.5, send:7.6, complete:6.9, badge:3.6 };
+  var ACtx = window.AudioContext || window.webkitAudioContext;
+  var SND = { on:false, vol:SOUND.defaultVolume / 100, ctx:null, master:null, gate:null, mus:null, sfxBus:null, delay:null, noise:null,
+            timer:null, next:0, step:0, playing:false, voice:null, leaving:false };
+  try { var sv = localStorage.getItem('aha_m04_vol'); if(sv !== null && !isNaN(+sv)) SND.vol = Math.max(0, Math.min(1, +sv / 100)); } catch(e){}
+  var ICON_ON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5L6 9H2v6h4l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/></svg>';
+  var ICON_OFF = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5L6 9H2v6h4l5 4z"/><path d="M22 9l-6 6M16 9l6 6"/></svg>';
+
+  function ensureCtx(){
+    if(SND.ctx || !ACtx) return SND.ctx;
+    var c = SND.ctx = new ACtx();
+    var lim = c.createDynamicsCompressor();   // pengehad: elak bunyi pecah
+    lim.threshold.value = -1.5; lim.knee.value = 0; lim.ratio.value = 20; lim.attack.value = 0.002; lim.release.value = 0.15;
+    lim.connect(c.destination);
+    SND.master = c.createGain(); SND.master.gain.value = 0; SND.master.connect(lim);
+    SND.gate = c.createGain(); SND.gate.gain.value = 0; SND.gate.connect(SND.master);
+    SND.mus = c.createGain(); SND.mus.gain.value = SOUND.levels.music * NORM.music; SND.mus.connect(SND.gate);
+    SND.sfxBus = c.createGain(); SND.sfxBus.gain.value = 1; SND.sfxBus.connect(SND.master);
+    SND.delay = c.createDelay(1); SND.delay.delayTime.value = 0.42;
+    var fb = c.createGain(); fb.gain.value = 0.32; var dlp = c.createBiquadFilter(); dlp.type = 'lowpass'; dlp.frequency.value = 2200;
+    SND.delay.connect(dlp); dlp.connect(fb); fb.connect(SND.delay); dlp.connect(SND.mus);
+    var len = c.sampleRate * 1.5, nb = c.createBuffer(1, len, c.sampleRate), d = nb.getChannelData(0);
+    for(var i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+    SND.noise = nb;
+    return c;
+  }
+  function updateMusic(){
+    var c = SND.ctx; if(!c) return;
+    var want = SND.on && !SND.leaving && document.visibilityState === 'visible';
+    if(want === SND.playing) return;
+    var t = c.currentTime;
+    SND.gate.gain.cancelScheduledValues(t); SND.gate.gain.setValueAtTime(SND.gate.gain.value, t);
+    SND.playing = want;
+    if(want){
+      SND.gate.gain.linearRampToValueAtTime(1, t + 1.5);
+      if(!SND.timer){ SND.next = t + 0.1; SND.step = 0; SND.timer = setInterval(schedule, 120); }
+    } else {
+      SND.gate.gain.linearRampToValueAtTime(0, t + 0.3);
+      if(SND.timer){ clearInterval(SND.timer); SND.timer = null; }
+    }
+  }
+
+  /* ---- Muzik latar: inspirasi, sinematik dan lembut (F – C – Dm – Bb) ---- */
+  var BEAT = 0.44;
+  var CHORDS = [[41,53,57,60,65],[36,52,55,60,64],[38,50,53,57,62],[34,50,53,58,62]];
+  function hz(m){ return 440 * Math.pow(2, (m - 69) / 12); }
+  function schedule(){
+    var c = SND.ctx; if(!c || !SND.playing) return;
+    while(SND.next < c.currentTime + 0.7){
+      var t = SND.next, st = SND.step, ch = CHORDS[Math.floor(st / 16) % 4];
+      if(st % 16 === 0) mPad(ch, t, BEAT * 16);
+      if(st % 4 === 0) mBass(ch[0] - 12, t, BEAT * 3);
+      if(st % 4 === 2 || st % 16 === 13) mSparkle(ch[1 + (st * 7) % 4] + 24, t);
+      SND.next += BEAT; SND.step++;
+    }
+  }
+  function mPad(ch, t, dur){
+    var c = SND.ctx, f = c.createBiquadFilter(); f.type = 'lowpass'; f.Q.value = 0.7;
+    f.frequency.setValueAtTime(800, t); f.frequency.linearRampToValueAtTime(1600, t + dur * 0.5); f.frequency.linearRampToValueAtTime(800, t + dur);
+    var g = c.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.045, t + 1.6);
+    g.gain.setValueAtTime(0.045, t + dur - 1.2); g.gain.linearRampToValueAtTime(0.0001, t + dur + 1.2);
+    f.connect(g); g.connect(SND.mus);
+    ch.slice(1).forEach(function(m){
+      [-6, 6].forEach(function(dt){
+        var o = c.createOscillator(); o.type = 'sawtooth'; o.frequency.value = hz(m); o.detune.value = dt;
+        o.connect(f); o.start(t); o.stop(t + dur + 1.3);
+      });
+    });
+  }
+  function mBass(m, t, len){
+    var c = SND.ctx, o = c.createOscillator(), g = c.createGain(), f = c.createBiquadFilter();
+    o.type = 'triangle'; o.frequency.value = hz(m); f.type = 'lowpass'; f.frequency.value = 420;
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.08, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + len * 1.6);
+    o.connect(f); f.connect(g); g.connect(SND.mus); o.start(t); o.stop(t + len * 1.7);
+  }
+  function mSparkle(m, t){
+    var c = SND.ctx, o = c.createOscillator(), g = c.createGain();
+    o.type = 'sine'; o.frequency.value = hz(m);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.035, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.9);
+    o.connect(g); g.connect(SND.mus); g.connect(SND.delay); o.start(t); o.stop(t + 1);
+  }
+
+  /* ---- Kesan bunyi (satu pada satu masa, tiada pertindihan) ---- */
+  function newVoice(gain){
+    var c = SND.ctx, t = c.currentTime;
+    if(SND.voice){ SND.voice.gain.cancelScheduledValues(t); SND.voice.gain.setTargetAtTime(0, t, 0.015); }
+    var v = SND.voice = c.createGain(); v.gain.value = gain; v.connect(SND.sfxBus); return v;
+  }
+  function tone(v, type, f1, f2, t, dur, peak){
+    var c = SND.ctx, o = c.createOscillator(), g = c.createGain();
+    o.type = type; o.frequency.setValueAtTime(f1, t); if(f2 !== f1) o.frequency.exponentialRampToValueAtTime(f2, t + dur);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + 0.012); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(v); o.start(t); o.stop(t + dur + 0.05);
+  }
+  function whoosh(v, t, dur, f1, f2, peak){
+    var c = SND.ctx, n = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain();
+    n.buffer = SND.noise; f.type = 'bandpass'; f.Q.value = 2.5;
+    f.frequency.setValueAtTime(f1, t); f.frequency.exponentialRampToValueAtTime(f2, t + dur);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + dur * 0.6); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    n.connect(f); f.connect(g); g.connect(v); n.start(t); n.stop(t + dur + 0.05);
+  }
+  var SYNTH = {
+    click: function(v, t){ tone(v, 'sine', 1400, 900, t, 0.07, 0.07); },
+    // Galeri dibuka: dentuman lembut, desiran naik dan arpeggio major (inspirasi)
+    open: function(v, t){
+      tone(v, 'sine', 110, 50, t, 0.9, 0.22);
+      whoosh(v, t, 0.8, 250, 3800, 0.08);
+      [53,57,60,65,69].forEach(function(m, i){ tone(v, 'triangle', hz(m), hz(m), t + 0.2 + i * 0.08, 0.5, 0.08); });
+    },
+    // Kad Perdana Menteri dibuka
+    card: function(v, t){ whoosh(v, t, 0.28, 600, 3200, 0.12); tone(v, 'triangle', hz(81), hz(81), t + 0.12, 0.3, 0.06); tone(v, 'sine', hz(88), hz(88), t + 0.18, 0.35, 0.03); },
+    // Tukar kad
+    swipe: function(v, t){ whoosh(v, t, 0.22, 2400, 900, 0.12); tone(v, 'sine', hz(76), hz(76), t + 0.1, 0.18, 0.04); },
+    // Maklumat jasa dan sumbangan dipaparkan
+    reveal: function(v, t){ [72,76,79].forEach(function(m, i){ tone(v, 'sine', hz(m), hz(m), t + i * 0.07, 0.5, 0.06); }); },
+    // Pilih jawapan / ungkapan
+    select: function(v, t){ tone(v, 'triangle', hz(74), hz(79), t, 0.1, 0.09); },
+    correct: function(v, t){ tone(v, 'triangle', hz(76), hz(76), t, 0.18, 0.13); tone(v, 'triangle', hz(83), hz(83), t + 0.1, 0.4, 0.13); tone(v, 'sine', hz(95), hz(95), t + 0.1, 0.5, 0.04); },
+    wrong: function(v, t){ tone(v, 'triangle', 300, 200, t, 0.22, 0.14); tone(v, 'triangle', 220, 140, t + 0.16, 0.32, 0.13); },
+    // Ayat penghargaan dihantar: kilauan hangat menaik
+    send: function(v, t){
+      whoosh(v, t, 0.5, 400, 5000, 0.06);
+      [65,69,72,77,81].forEach(function(m, i){ tone(v, 'sine', hz(m), hz(m), t + 0.05 + i * 0.07, 0.6, 0.06); });
+      [53,60,65].forEach(function(m){ tone(v, 'triangle', hz(m), hz(m), t + 0.1, 1.0, 0.05); });
+    }
+  };
+  // Misi selesai, kemudian lencana pencapaian (lebih megah bagi tahap lebih tinggi)
+  function finComplete(v, t){ [65,69,72,77].forEach(function(m, i){ tone(v, 'triangle', hz(m), hz(m), t + i * 0.11, 0.55, 0.11); }); tone(v, 'sine', hz(89), hz(89), t + 0.44, 0.9, 0.04); }
+  function finBadge(v, t, lv){
+    var top = lv === 3 ? [65,69,72,77,81] : lv === 2 ? [65,69,72,77] : [65,69,72];
+    top.forEach(function(m, i){ tone(v, 'triangle', hz(m), hz(m), t + i * 0.09, 0.45, 0.1); });
+    var tc = t + top.length * 0.09 + 0.05;
+    [53,57,60,65].forEach(function(m){ tone(v, 'sawtooth', hz(m), hz(m), tc, 1.6, 0.025); tone(v, 'triangle', hz(m), hz(m), tc, 1.6, 0.06); });
+    if(lv >= 2) [84,89,93].forEach(function(m, i){ tone(v, 'sine', hz(m), hz(m), tc + 0.1 + i * 0.12, 0.7, 0.03); });
+  }
+  function subG(v, name){ var g = SND.ctx.createGain(); g.gain.value = SOUND.levels[name] * NORM[name]; g.connect(v); return g; }
+  function sndMissionComplete(lv){
+    if(!SND.on || !SND.ctx || SND.ctx.state !== 'running') return;
+    var v = newVoice(1), t = SND.ctx.currentTime + 0.05;
+    finComplete(subG(v, 'complete'), t);
+    finBadge(subG(v, 'badge'), t + 0.75, lv);
+  }
+  function sfx(name){
+    if(!SND.on || !SND.ctx || SND.ctx.state !== 'running') return;
+    var v = newVoice(SOUND.levels[name] * NORM[name]);
+    SYNTH[name](v, SND.ctx.currentTime + 0.01);
+  }
+
+  /* ---- Maklumat jasa dan sumbangan: bunyi apabila bahagian itu dipaparkan ---- */
+  var revealObs = null, revealDone = false, revealTimer = null;
+  function sndCardOpened(){
+    revealDone = false;
+    if(revealObs){ revealObs.disconnect(); revealObs = null; }
+    clearTimeout(revealTimer);
+    var secs = $('jvBody').querySelectorAll('.sec'), sec = secs[1];
+    if(!sec || !('IntersectionObserver' in window)) return;
+    // tunggu bunyi buka/tukar kad selesai dahulu
+    revealTimer = setTimeout(function(){
+      revealObs = new IntersectionObserver(function(en){
+        en.forEach(function(e){
+          if(e.isIntersecting && !revealDone){ revealDone = true; sfx('reveal'); revealObs.disconnect(); }
+        });
+      }, { root:$('modalBox'), threshold:0.35 });
+      revealObs.observe(sec);
+    }, 420);
+  }
+
+  /* ---- Kawalan ---- */
+  function applyVol(){
+    $('sndVol').value = Math.round(SND.vol * 100); $('sndVolTxt').textContent = Math.round(SND.vol * 100) + '%';
+    if(SND.ctx){ var t = SND.ctx.currentTime; SND.master.gain.cancelScheduledValues(t); SND.master.gain.setTargetAtTime(SND.on ? SND.vol : 0, t, 0.05); }
+  }
+  function renderSnd(){
+    var b = $('sndBtn');
+    b.innerHTML = SND.on ? ICON_ON : ICON_OFF; b.classList.toggle('on', SND.on);
+    b.setAttribute('aria-label', 'Tetapan bunyi (' + (SND.on ? 'bunyi dihidupkan' : 'bunyi dimatikan') + ')');
+    $('sndOn').setAttribute('aria-pressed', SND.on ? 'true' : 'false');
+    $('sndOff').setAttribute('aria-pressed', SND.on ? 'false' : 'true');
+  }
+  function setSound(on){
+    if(on && !ACtx){ $('sndNote').textContent = 'Pelayar ini tidak menyokong bunyi.'; return; }
+    if(on === SND.on){ renderSnd(); return; }
+    SND.on = on;
+    if(on){
+      var c = ensureCtx(); SND.leaving = false;
+      var go = function(){ applyVol(); updateMusic(); sfx('click'); };
+      if(c.state !== 'running'){ var pr = c.resume(); if(pr && pr.then) pr.then(go, go); else go(); } else go();
+      try { var sb = c.createBufferSource(); sb.buffer = c.createBuffer(1, 1, 22050); sb.connect(c.destination); sb.start(0); } catch(e){}  // buka kunci audio iOS
+    } else if(SND.ctx){
+      var t = SND.ctx.currentTime; SND.master.gain.cancelScheduledValues(t); SND.master.gain.setValueAtTime(0, t);
+      updateMusic();
+      setTimeout(function(){ if(!SND.on && SND.ctx.state === 'running') SND.ctx.suspend(); }, 500);
+    }
+    renderSnd();
+  }
+  $('sndBtn').addEventListener('click', function(){
+    var pnl = $('sndPanel'), open = pnl.hidden; pnl.hidden = !open; this.setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
+  $('sndOn').addEventListener('click', function(){ setSound(true); });
+  $('sndOff').addEventListener('click', function(){ setSound(false); });
+  $('sndVol').addEventListener('input', function(){
+    SND.vol = +this.value / 100; applyVol();
+    try { localStorage.setItem('aha_m04_vol', String(Math.round(SND.vol * 100))); } catch(e){}
+  });
+  document.addEventListener('click', function(e){
+    var pnl = $('sndPanel'); if(pnl.hidden || e.target.closest('#snd')) return;
+    pnl.hidden = true; $('sndBtn').setAttribute('aria-expanded','false');
+  });
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'Escape' && !$('sndPanel').hidden){ $('sndPanel').hidden = true; $('sndBtn').setAttribute('aria-expanded','false'); $('sndBtn').focus(); }
+  });
+  // Pilih bunyi mengikut butang yang ditekan
+  document.addEventListener('click', function(e){
+    var b = e.target.closest('button, a'); if(!b || b.disabled || b.closest('#snd')) return;
+    if(b.id === 'hqClose'){ if(SND.on){ SND.leaving = false; updateMusic(); } sfx('click'); return; }
+    if(b.hasAttribute('data-hq') || b.id === 'hqNewTab'){            // meninggalkan modul: hentikan muzik
+      sfx('click'); SND.leaving = true; updateMusic(); return;
+    }
+    if(b.id === 'btnStart') sfx('open');                                     // galeri dibuka
+    else if(b.closest('#gallery')) sfx('card');                               // kad Perdana Menteri dibuka
+    else if(b.id === 'jvPrev' || b.id === 'jvNext') sfx('swipe');             // tukar kad
+    else if(b.classList.contains('opt')){ if(!S.checked) sfx('select'); }     // pilih jawapan padanan
+    else if(b.closest('#chips')) sfx('select');                               // pilih ungkapan
+    else if(b.id === 'qCheck') return;                                        // bunyi betul/salah dimainkan oleh semakan
+    else if(b.id === 'btnSend') return;                                       // bunyi hantar dimainkan selepas berjaya
+    else if(b.id === 'toZ4') return;                                          // bunyi misi selesai dimainkan di Zon 4
+    else sfx('click');
+  }, true);
+  document.addEventListener('visibilitychange', function(){
+    if(!SND.ctx) return;
+    if(document.visibilityState === 'hidden') updateMusic();
+    else if(SND.on){ SND.leaving = false; var pr = SND.ctx.resume(); if(pr && pr.then) pr.then(updateMusic); else updateMusic(); }
+  });
+  window.addEventListener('pagehide', function(){ if(SND.ctx){ SND.leaving = true; updateMusic(); } });
+  // Jika navigasi keluar disekat (panel sandaran muncul), muzik disambung semula apabila panel ditutup
+  renderSnd(); applyVol();
 
   /* ---------- Mula ---------- */
   fillWho();
