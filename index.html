@@ -738,6 +738,9 @@ button{font:inherit;cursor:pointer}
   /* URL penuh Modul 02 – Arkib Pemimpin (GitHub Pages) */
   var MODULE02_URL = 'https://sites.google.com/moe-dl.edu.my/ejen-akademi-sejarah/arkib-pemimpin';
 
+  /* URL penuh Modul 03 – Jejak Kronologi (Google Sites) */
+  var MODULE03_URL = 'https://sites.google.com/moe-dl.edu.my/ejen-akademi-sejarah/jejak-kronologi';
+
   /* ---------------------------------------------------------
      1. DATA MISI
      available: true  = modul wujud dan boleh dimainkan
@@ -761,8 +764,10 @@ button{font:inherit;cursor:pointer}
       // Modul 02 diterbitkan secara berasingan di GitHub Pages.
       // Dibuka dalam tab baharu terus daripada klik murid supaya tidak disekat pelayar.
       start:function(){ window.open(MODULE02_URL, '_blank', 'noopener'); closeModal(); } },
-    { id:3, title:'JEJAK KRONOLOGI', icon:'timeline', available:false,
-      desc:'Susun Perdana Menteri Malaysia mengikut urutan yang betul.' },
+    { id:3, title:'JEJAK KRONOLOGI', icon:'timeline', available:true,
+      desc:'Susun Perdana Menteri Malaysia mengikut urutan yang betul.',
+      // Modul 03 di Google Sites, dibuka dalam tab baharu terus daripada klik murid.
+      start:function(){ window.open(MODULE03_URL, '_blank', 'noopener'); closeModal(); } },
     { id:4, title:'GALERI PENGHARGAAN', icon:'gallery', available:false,
       desc:'Kenali jasa pemimpin dan nyatakan penghargaan terhadap mereka.' },
     { id:5, title:'CABARAN AKHIR', icon:'challenge', available:false,
