@@ -425,6 +425,15 @@ button{font:inherit;cursor:pointer}
 .mission h3{font:800 1rem var(--font-display);letter-spacing:.06em;color:var(--gold);line-height:1.3}
 .mission p{font-size:.92rem;color:var(--muted)}
 .m-cta{margin-top:auto;font:700 .7rem var(--font-display);letter-spacing:.16em;color:var(--cyan)}
+.screen.active .mission:nth-child(6){animation-delay:.40s}
+/* Kad khas Bilik Pembelajaran (akses pusat sumber, bukan misi) */
+.mission.resource{grid-column:1/-1;min-height:0;text-decoration:none;flex-direction:row;align-items:center;gap:18px;
+  border-color:rgba(83,216,232,.55);background:linear-gradient(120deg,rgba(83,216,232,.14),rgba(16,35,61,.95) 45%,rgba(7,20,38,.92))}
+.mission.resource .r-body{display:flex;flex-direction:column;gap:6px;flex:1;min-width:0}
+.mission.resource .m-icon{flex:0 0 64px;width:64px;height:64px;background:rgba(83,216,232,.12);border-color:rgba(83,216,232,.5)}
+.mission.resource .m-icon svg{width:34px;height:34px;stroke:var(--cyan)}
+.mission.resource .m-cta{margin-top:4px}
+@media (max-width:640px){.mission.resource{flex-direction:column;align-items:flex-start}}
 
 /* =========================================================
    10. MODAL TAKLIMAT MISI
@@ -879,8 +888,26 @@ button{font:inherit;cursor:pointer}
     return {cls:'lock', label:'AKAN DATANG'};
   }
 
+  /* Kad khas: Bilik Pembelajaran (pusat sumber). BUKAN misi – tidak
+     dikira dalam jumlah misi, misi selesai atau peratus kemajuan. */
+  var BILIK_URL = 'https://sites.google.com/moe-dl.edu.my/ejen-akademi-sejarah/bilik-pembelajaran';
+  var ICON_LIBRARY = '<svg viewBox="0 0 24 24"><path d="M2 5.5C4.5 4 7.5 4 12 6c4.5-2 7.5-2 10-.5V19c-2.5-1.5-5.5-1.5-10 .5-4.5-2-7.5-2-10-.5z"/><path d="M12 6v13.5"/><path d="M5 9h4M5 12h4M15 9h4M15 12h4"/></svg>';
+  function resourceCard(){
+    var a = document.createElement('a');
+    a.className = 'mission resource';
+    a.href = BILIK_URL; a.target = '_blank'; a.rel = 'noopener';
+    a.setAttribute('aria-label', 'Bilik Pembelajaran: akses khas pusat sumber (dibuka dalam tab baharu)');
+    a.innerHTML =
+      '<div class="m-icon" aria-hidden="true">' + ICON_LIBRARY + '</div>' +
+      '<div class="r-body"><div class="m-top"><span class="m-num">AKSES KHAS · PUSAT SUMBER</span><span class="m-state open">DIBUKA</span></div>' +
+      '<h3>BILIK PEMBELAJARAN</h3><p>Teroka video, audio, imej, dokumen dan animasi sebelum memulakan misi.</p>' +
+      '<span class="m-cta">MASUK BILIK PEMBELAJARAN ↗</span></div>';
+    return a;
+  }
+
   function renderMissions(){
     missionsEl.innerHTML = '';
+    missionsEl.appendChild(resourceCard());
     MISSIONS.forEach(function(m){
       var st = stateOf(m);
       var card = document.createElement('button');
