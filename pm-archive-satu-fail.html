@@ -225,6 +225,26 @@ button,a{font:inherit;cursor:pointer}
 /* =========================================================
    11. KURANGKAN GERAKAN
    ========================================================= */
+/* ---------- Kawalan bunyi ---------- */
+.snd{position:fixed;top:12px;right:12px;z-index:85;display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.snd-btn{width:46px;height:46px;border-radius:50%;border:1.5px solid rgba(169,183,201,.5);background:rgba(16,35,61,.92);color:var(--muted);display:grid;place-items:center;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.35);transition:border-color .2s,color .2s,box-shadow .2s}
+.snd-btn svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.snd-btn.on{border-color:var(--cyan);color:var(--cyan);box-shadow:0 0 18px rgba(83,216,232,.45)}
+.snd-panel{width:240px;padding:14px;border-radius:14px;background:rgba(16,35,61,.98);border:1px solid var(--gold);box-shadow:0 16px 40px rgba(0,0,0,.5);color:var(--white)}
+.snd-panel[hidden]{display:none}
+.snd-panel .ttl{font:600 .66rem var(--font-display);letter-spacing:.2em;color:var(--gold);margin-bottom:10px}
+.snd-panel .row{display:flex;gap:8px}
+.snd-panel .btn{flex:1;min-height:38px;padding:6px 8px;font-size:.6rem;letter-spacing:.08em}
+.snd-panel .btn[aria-pressed="true"]{background:var(--cyan);border-color:var(--cyan);color:var(--bg)}
+.snd-panel label{display:flex;justify-content:space-between;font:600 .62rem var(--font-display);letter-spacing:.14em;color:var(--muted);margin:14px 0 6px}
+.snd-panel input[type=range]{width:100%;accent-color:var(--gold);height:28px}
+.snd-panel .note{font-size:.74rem;color:var(--muted);margin-top:8px;line-height:1.4}
+@media (max-width:1000px){
+  .screen,.screen.top{padding-top:72px}
+  .modal{padding-top:68px}
+  .modal-box{max-height:calc(100dvh - 84px)}
+}
+
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;animation-delay:0s!important;transition-duration:.001ms!important}
   .bg-scan::before{display:none}
@@ -314,6 +334,21 @@ button,a{font:inherit;cursor:pointer}
     </div>
   </section>
 </main>
+
+<!-- ================= KAWALAN BUNYI ================= -->
+<div class="snd" id="snd">
+  <button class="snd-btn" type="button" id="sndBtn" aria-expanded="false" aria-controls="sndPanel" aria-label="Tetapan bunyi (bunyi dimatikan)"></button>
+  <div class="snd-panel" id="sndPanel" role="group" aria-label="Tetapan bunyi" hidden>
+    <div class="ttl">BUNYI</div>
+    <div class="row">
+      <button class="btn" type="button" id="sndOn" aria-pressed="false">Sound On</button>
+      <button class="btn" type="button" id="sndOff" aria-pressed="true">Sound Off</button>
+    </div>
+    <label for="sndVol"><span>VOLUME</span><span id="sndVolTxt">100%</span></label>
+    <input type="range" id="sndVol" min="0" max="100" step="1" value="100">
+    <p class="note" id="sndNote">Bunyi berhenti apabila kamu meninggalkan modul ini atau membuka halaman lain.</p>
+  </div>
+</div>
 
 <!-- ================= MODAL PROFIL ================= -->
 <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="pfName" aria-hidden="true">
@@ -697,6 +732,7 @@ var QUESTIONS = [
     }
     setTimeout(function(){ $('modalClose').focus(); }, 30);
     markSeen(p.no);
+    sndProfileOpened();
   }
   function closeProfile(){
     if(!modal.classList.contains('open')) return;
@@ -719,6 +755,7 @@ var QUESTIONS = [
   var award = $('award');
   function showAward(){
     awardShown = true; save(KEY_AWARD, true);
+    sfx('award');
     award.classList.add('open'); award.setAttribute('aria-hidden','false');
     setTimeout(function(){ $('awardQuiz').focus(); }, 50);
   }
@@ -751,6 +788,7 @@ var QUESTIONS = [
     var q = QUESTIONS[qi], opts = qBox.querySelectorAll('.opt'), fb = $('fb');
     opts.forEach(function(b){ b.disabled = true; });
     opts[q.a].classList.add('correct');
+    sfx(k === q.a ? 'correct' : 'wrong');
     if(k === q.a){
       score++; fb.className = 'feedback show ok'; fb.textContent = 'Betul! Syabas, Ejen!';
     } else {
@@ -765,6 +803,7 @@ var QUESTIONS = [
   function results(){
     var pct = Math.round(score / QUESTIONS.length * 100);
     if(best === null || score > best){ best = score; save(KEY_BEST, best); }
+    sfx(score === QUESTIONS.length ? 'perfect' : 'complete');
     var msg = pct === 100 ? 'Hebat! Kamu menjawab semua soalan dengan betul.' : (pct >= 60 ? 'Bagus! Teruskan usaha, Ejen.' : 'Jangan putus asa. Teroka arkib sekali lagi dan cuba semula.');
     qBox.innerHTML =
       '<div class="result">' +
@@ -798,6 +837,238 @@ var QUESTIONS = [
   function loop(){ if(!document.hidden) draw(true); requestAnimationFrame(loop); }
   addEventListener('resize', resize); resize();
   if(!reduceMotion) requestAnimationFrame(loop);
+
+  /* =========================================================
+     SISTEM BUNYI (Web Audio API – tiada fail luaran)
+     Gaya sama seperti Modul 01. Bermula OFF; murid menekan SOUND ON.
+     Muzik berhenti apabila murid meninggalkan modul atau membuka halaman lain.
+     ========================================================= */
+  var SOUND = {
+    levels: { music:0.32, click:0.60, open:0.72, card:0.65, swipe:0.55, reveal:0.60, correct:0.70, wrong:0.60, complete:0.75, perfect:0.75, award:0.75 }, // pada volume 100%
+    defaultVolume: 100
+  };
+  var NORM = { music:3.1, click:13.5, open:3.6, card:14.7, swipe:18.2, reveal:10.7,
+               correct:5.85, wrong:6.5, complete:6.9, perfect:3.3, award:3.3 };
+  var ACtx = window.AudioContext || window.webkitAudioContext;
+  var S = { on:false, vol:SOUND.defaultVolume / 100, ctx:null, master:null, gate:null, mus:null, sfxBus:null, delay:null, noise:null,
+            timer:null, next:0, step:0, playing:false, voice:null, leaving:false };
+  try { var sv = localStorage.getItem('aha_m02_vol'); if(sv !== null && !isNaN(+sv)) S.vol = Math.max(0, Math.min(1, +sv / 100)); } catch(e){}
+  var ICON_ON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5L6 9H2v6h4l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/></svg>';
+  var ICON_OFF = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5L6 9H2v6h4l5 4z"/><path d="M22 9l-6 6M16 9l6 6"/></svg>';
+
+  function ensureCtx(){
+    if(S.ctx || !ACtx) return S.ctx;
+    var c = S.ctx = new ACtx();
+    var lim = c.createDynamicsCompressor();   // pengehad: elak bunyi pecah
+    lim.threshold.value = -1.5; lim.knee.value = 0; lim.ratio.value = 20; lim.attack.value = 0.002; lim.release.value = 0.15;
+    lim.connect(c.destination);
+    S.master = c.createGain(); S.master.gain.value = 0; S.master.connect(lim);
+    S.gate = c.createGain(); S.gate.gain.value = 0; S.gate.connect(S.master);
+    S.mus = c.createGain(); S.mus.gain.value = SOUND.levels.music * NORM.music; S.mus.connect(S.gate);
+    S.sfxBus = c.createGain(); S.sfxBus.gain.value = 1; S.sfxBus.connect(S.master);
+    S.delay = c.createDelay(1); S.delay.delayTime.value = 0.42;
+    var fb = c.createGain(); fb.gain.value = 0.32; var dlp = c.createBiquadFilter(); dlp.type = 'lowpass'; dlp.frequency.value = 2200;
+    S.delay.connect(dlp); dlp.connect(fb); fb.connect(S.delay); dlp.connect(S.mus);
+    var len = c.sampleRate * 1.5, nb = c.createBuffer(1, len, c.sampleRate), d = nb.getChannelData(0);
+    for(var i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+    S.noise = nb;
+    return c;
+  }
+  function updateMusic(){
+    var c = S.ctx; if(!c) return;
+    var want = S.on && !S.leaving && document.visibilityState === 'visible';
+    if(want === S.playing) return;
+    var t = c.currentTime;
+    S.gate.gain.cancelScheduledValues(t); S.gate.gain.setValueAtTime(S.gate.gain.value, t);
+    S.playing = want;
+    if(want){
+      S.gate.gain.linearRampToValueAtTime(1, t + 1.5);
+      if(!S.timer){ S.next = t + 0.1; S.step = 0; S.timer = setInterval(schedule, 120); }
+    } else {
+      S.gate.gain.linearRampToValueAtTime(0, t + 0.3);
+      if(S.timer){ clearInterval(S.timer); S.timer = null; }
+    }
+  }
+
+  /* ---- Muzik latar: futuristik dan lembut (Dm9 – Bbmaj7 – Fmaj7 – Csus) ---- */
+  var BEAT = 0.42;
+  var CHORDS = [[38,53,57,60,64],[34,50,53,57,62],[41,52,57,60,64],[36,48,53,55,62]];
+  function hz(m){ return 440 * Math.pow(2, (m - 69) / 12); }
+  function schedule(){
+    var c = S.ctx; if(!c || !S.playing) return;
+    while(S.next < c.currentTime + 0.7){
+      var t = S.next, st = S.step, ch = CHORDS[Math.floor(st / 16) % 4];
+      if(st % 16 === 0) mPad(ch, t, BEAT * 16);
+      if(st % 4 === 0) mBass(ch[0] - 12, t, BEAT * 3);
+      if(st % 8 === 5 || st % 16 === 13) mSparkle(ch[1 + (st * 7) % 4] + 24, t);
+      S.next += BEAT; S.step++;
+    }
+  }
+  function mPad(ch, t, dur){
+    var c = S.ctx, f = c.createBiquadFilter(); f.type = 'lowpass'; f.Q.value = 0.7;
+    f.frequency.setValueAtTime(700, t); f.frequency.linearRampToValueAtTime(1400, t + dur * 0.5); f.frequency.linearRampToValueAtTime(700, t + dur);
+    var g = c.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.045, t + 1.6);
+    g.gain.setValueAtTime(0.045, t + dur - 1.2); g.gain.linearRampToValueAtTime(0.0001, t + dur + 1.2);
+    f.connect(g); g.connect(S.mus);
+    ch.slice(1).forEach(function(m){
+      [-6, 6].forEach(function(dt){
+        var o = c.createOscillator(); o.type = 'sawtooth'; o.frequency.value = hz(m); o.detune.value = dt;
+        o.connect(f); o.start(t); o.stop(t + dur + 1.3);
+      });
+    });
+  }
+  function mBass(m, t, len){
+    var c = S.ctx, o = c.createOscillator(), g = c.createGain(), f = c.createBiquadFilter();
+    o.type = 'triangle'; o.frequency.value = hz(m); f.type = 'lowpass'; f.frequency.value = 420;
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.08, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + len * 1.6);
+    o.connect(f); f.connect(g); g.connect(S.mus); o.start(t); o.stop(t + len * 1.7);
+  }
+  function mSparkle(m, t){
+    var c = S.ctx, o = c.createOscillator(), g = c.createGain();
+    o.type = 'sine'; o.frequency.value = hz(m);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.035, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.9);
+    o.connect(g); g.connect(S.mus); g.connect(S.delay); o.start(t); o.stop(t + 1);
+  }
+
+  /* ---- Kesan bunyi (satu pada satu masa, tiada pertindihan) ---- */
+  function newVoice(gain){
+    var c = S.ctx, t = c.currentTime;
+    if(S.voice){ S.voice.gain.cancelScheduledValues(t); S.voice.gain.setTargetAtTime(0, t, 0.015); }
+    var v = S.voice = c.createGain(); v.gain.value = gain; v.connect(S.sfxBus); return v;
+  }
+  function tone(v, type, f1, f2, t, dur, peak){
+    var c = S.ctx, o = c.createOscillator(), g = c.createGain();
+    o.type = type; o.frequency.setValueAtTime(f1, t); if(f2 !== f1) o.frequency.exponentialRampToValueAtTime(f2, t + dur);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + 0.012); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(v); o.start(t); o.stop(t + dur + 0.05);
+  }
+  function whoosh(v, t, dur, f1, f2, peak){
+    var c = S.ctx, n = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain();
+    n.buffer = S.noise; f.type = 'bandpass'; f.Q.value = 2.5;
+    f.frequency.setValueAtTime(f1, t); f.frequency.exponentialRampToValueAtTime(f2, t + dur);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + dur * 0.6); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    n.connect(f); f.connect(g); g.connect(v); n.start(t); n.stop(t + dur + 0.05);
+  }
+  var SYNTH = {
+    click: function(v, t){ tone(v, 'sine', 1400, 900, t, 0.07, 0.07); },
+    // Arkib dibuka: dentuman pintu bilik kebal + desiran + arpeggio
+    open: function(v, t){
+      tone(v, 'sine', 110, 45, t, 0.9, 0.25);
+      whoosh(v, t, 0.7, 250, 3500, 0.09);
+      [57,62,65,69].forEach(function(m, i){ tone(v, 'triangle', hz(m), hz(m), t + 0.2 + i * 0.08, 0.45, 0.08); });
+    },
+    // Kad biodata dibuka
+    card: function(v, t){ whoosh(v, t, 0.28, 600, 3200, 0.12); tone(v, 'triangle', hz(81), hz(81), t + 0.12, 0.3, 0.06); tone(v, 'sine', hz(88), hz(88), t + 0.18, 0.35, 0.03); },
+    // Tukar kad (seterusnya / sebelumnya)
+    swipe: function(v, t){ whoosh(v, t, 0.22, 2400, 900, 0.12); tone(v, 'sine', hz(76), hz(76), t + 0.1, 0.18, 0.04); },
+    // Maklumat sumbangan dipaparkan
+    reveal: function(v, t){ [74,78,81].forEach(function(m, i){ tone(v, 'sine', hz(m), hz(m), t + i * 0.07, 0.5, 0.06); }); },
+    correct: function(v, t){ tone(v, 'triangle', hz(76), hz(76), t, 0.18, 0.13); tone(v, 'triangle', hz(83), hz(83), t + 0.1, 0.4, 0.13); tone(v, 'sine', hz(95), hz(95), t + 0.1, 0.5, 0.04); },
+    wrong: function(v, t){ tone(v, 'triangle', 300, 200, t, 0.22, 0.14); tone(v, 'triangle', 220, 140, t + 0.16, 0.32, 0.13); },
+    complete: function(v, t){ [62,65,69,74].forEach(function(m, i){ tone(v, 'triangle', hz(m), hz(m), t + i * 0.11, 0.55, 0.11); }); tone(v, 'sine', hz(86), hz(86), t + 0.44, 0.9, 0.04); },
+    perfect: function(v, t){
+      [62,66,69,74,78].forEach(function(m, i){ tone(v, 'triangle', hz(m), hz(m), t + i * 0.09, 0.45, 0.1); });
+      [62,66,69,74].forEach(function(m){ tone(v, 'sawtooth', hz(m), hz(m), t + 0.5, 1.6, 0.025); tone(v, 'triangle', hz(m), hz(m), t + 0.5, 1.6, 0.06); });
+      [86,90,93].forEach(function(m, i){ tone(v, 'sine', hz(m), hz(m), t + 0.6 + i * 0.12, 0.7, 0.03); });
+    },
+    // Semua 10 profil diterokai (anugerah)
+    award: function(v, t){
+      [62,66,69].forEach(function(m, i){ tone(v, 'triangle', hz(m), hz(m), t + i * 0.08, 0.4, 0.1); });
+      [62,66,69,74].forEach(function(m){ tone(v, 'triangle', hz(m), hz(m), t + 0.3, 1.3, 0.06); tone(v, 'sawtooth', hz(m), hz(m), t + 0.3, 1.3, 0.02); });
+      tone(v, 'sine', hz(90), hz(90), t + 0.45, 0.8, 0.03);
+    }
+  };
+  function sfx(name){
+    if(!S.on || !S.ctx || S.ctx.state !== 'running') return;
+    var v = newVoice(SOUND.levels[name] * NORM[name]);
+    SYNTH[name](v, S.ctx.currentTime + 0.01);
+  }
+
+  /* ---- Maklumat sumbangan: bunyi apabila bahagian itu dipaparkan ---- */
+  var revealObs = null, revealDone = false, revealTimer = null;
+  function sndProfileOpened(){
+    revealDone = false;
+    if(revealObs){ revealObs.disconnect(); revealObs = null; }
+    clearTimeout(revealTimer);
+    var secs = $('pfBody').querySelectorAll('.sec'), sec = secs[1];
+    if(!sec || !('IntersectionObserver' in window)) return;
+    // tunggu bunyi buka/tukar kad selesai dahulu
+    revealTimer = setTimeout(function(){
+      revealObs = new IntersectionObserver(function(en){
+        en.forEach(function(e){
+          if(e.isIntersecting && !revealDone){ revealDone = true; sfx('reveal'); revealObs.disconnect(); }
+        });
+      }, { root:$('modalBox'), threshold:0.35 });
+      revealObs.observe(sec);
+    }, 420);
+  }
+
+  /* ---- Kawalan ---- */
+  function applyVol(){
+    $('sndVol').value = Math.round(S.vol * 100); $('sndVolTxt').textContent = Math.round(S.vol * 100) + '%';
+    if(S.ctx){ var t = S.ctx.currentTime; S.master.gain.cancelScheduledValues(t); S.master.gain.setTargetAtTime(S.on ? S.vol : 0, t, 0.05); }
+  }
+  function renderSnd(){
+    var b = $('sndBtn');
+    b.innerHTML = S.on ? ICON_ON : ICON_OFF; b.classList.toggle('on', S.on);
+    b.setAttribute('aria-label', 'Tetapan bunyi (' + (S.on ? 'bunyi dihidupkan' : 'bunyi dimatikan') + ')');
+    $('sndOn').setAttribute('aria-pressed', S.on ? 'true' : 'false');
+    $('sndOff').setAttribute('aria-pressed', S.on ? 'false' : 'true');
+  }
+  function setSound(on){
+    if(on && !ACtx){ $('sndNote').textContent = 'Pelayar ini tidak menyokong bunyi.'; return; }
+    if(on === S.on){ renderSnd(); return; }
+    S.on = on;
+    if(on){
+      var c = ensureCtx(); S.leaving = false;
+      var go = function(){ applyVol(); updateMusic(); sfx('click'); };
+      if(c.state !== 'running'){ var pr = c.resume(); if(pr && pr.then) pr.then(go, go); else go(); } else go();
+      try { var sb = c.createBufferSource(); sb.buffer = c.createBuffer(1, 1, 22050); sb.connect(c.destination); sb.start(0); } catch(e){}  // buka kunci audio iOS
+    } else if(S.ctx){
+      var t = S.ctx.currentTime; S.master.gain.cancelScheduledValues(t); S.master.gain.setValueAtTime(0, t);
+      updateMusic();
+      setTimeout(function(){ if(!S.on && S.ctx.state === 'running') S.ctx.suspend(); }, 500);
+    }
+    renderSnd();
+  }
+  $('sndBtn').addEventListener('click', function(){
+    var pnl = $('sndPanel'), open = pnl.hidden; pnl.hidden = !open; this.setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
+  $('sndOn').addEventListener('click', function(){ setSound(true); });
+  $('sndOff').addEventListener('click', function(){ setSound(false); });
+  $('sndVol').addEventListener('input', function(){
+    S.vol = +this.value / 100; applyVol();
+    try { localStorage.setItem('aha_m02_vol', String(Math.round(S.vol * 100))); } catch(e){}
+  });
+  document.addEventListener('click', function(e){
+    var pnl = $('sndPanel'); if(pnl.hidden || e.target.closest('#snd')) return;
+    pnl.hidden = true; $('sndBtn').setAttribute('aria-expanded','false');
+  });
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'Escape' && !$('sndPanel').hidden){ $('sndPanel').hidden = true; $('sndBtn').setAttribute('aria-expanded','false'); $('sndBtn').focus(); }
+  });
+  // Pilih bunyi mengikut butang yang ditekan
+  document.addEventListener('click', function(e){
+    var b = e.target.closest('button, a'); if(!b || b.disabled || b.closest('#snd')) return;
+    if(b.id === 'hqClose'){ if(S.on){ S.leaving = false; updateMusic(); } sfx('click'); return; }
+    if(b.hasAttribute('data-hq') || b.id === 'hqNewTab'){            // meninggalkan modul: hentikan muzik
+      sfx('click'); S.leaving = true; updateMusic(); return;
+    }
+    if(b.getAttribute('data-go') === 'archive' && current === 'intro') sfx('open');   // Arkib dibuka
+    else if(b.closest('#grid')) sfx('card');                                          // kad biodata dibuka
+    else if(b.id === 'pfPrev' || b.id === 'pfNext') sfx('swipe');                     // tukar kad
+    else if(b.classList.contains('opt')) return;                                      // bunyi betul/salah dimainkan oleh kuiz
+    else if(b.id === 'qNext' && qi === QUESTIONS.length - 1) return;                  // bunyi tamat dimainkan oleh keputusan
+    else sfx('click');
+  }, true);
+  document.addEventListener('visibilitychange', function(){
+    if(!S.ctx) return;
+    if(document.visibilityState === 'hidden') updateMusic();
+    else if(S.on){ S.leaving = false; var pr = S.ctx.resume(); if(pr && pr.then) pr.then(updateMusic); else updateMusic(); }
+  });
+  window.addEventListener('pagehide', function(){ if(S.ctx){ S.leaving = true; updateMusic(); } });
+  // Jika navigasi keluar disekat (panel sandaran muncul), muzik disambung semula apabila panel ditutup
+  renderSnd(); applyVol();
 
   updateStatus();
 })();
