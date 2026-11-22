@@ -741,6 +741,9 @@ button{font:inherit;cursor:pointer}
   /* URL penuh Modul 03 – Jejak Kronologi (Google Sites) */
   var MODULE03_URL = 'https://sites.google.com/moe-dl.edu.my/ejen-akademi-sejarah/jejak-kronologi';
 
+  /* URL penuh Modul 04 – Galeri Penghargaan (Google Sites) */
+  var MODULE04_URL = 'https://sites.google.com/moe-dl.edu.my/ejen-akademi-sejarah/galeri-penghargaan';
+
   /* ---------------------------------------------------------
      1. DATA MISI
      available: true  = modul wujud dan boleh dimainkan
@@ -768,8 +771,10 @@ button{font:inherit;cursor:pointer}
       desc:'Susun Perdana Menteri Malaysia mengikut urutan yang betul.',
       // Modul 03 di Google Sites, dibuka dalam tab baharu terus daripada klik murid.
       start:function(){ window.open(MODULE03_URL, '_blank', 'noopener'); closeModal(); } },
-    { id:4, title:'GALERI PENGHARGAAN', icon:'gallery', available:false,
-      desc:'Kenali jasa pemimpin dan nyatakan penghargaan terhadap mereka.' },
+    { id:4, title:'GALERI PENGHARGAAN', icon:'gallery', available:true,
+      desc:'Kenali jasa pemimpin dan nyatakan penghargaan terhadap mereka.',
+      // Modul 04 di Google Sites, dibuka dalam tab baharu terus daripada klik murid.
+      start:function(){ window.open(MODULE04_URL, '_blank', 'noopener'); closeModal(); } },
     { id:5, title:'CABARAN AKHIR', icon:'challenge', available:false,
       desc:'Uji pengetahuan sejarah melalui cabaran interaktif.' }
   ];
