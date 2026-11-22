@@ -1,0 +1,1113 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Final Mission – Agent History Academy</title>
+<meta name="description" content="Modul 05 Agent History Academy: Final Mission – Misi Penentuan Ejen Sejarah (Sejarah Tahun 6).">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Nunito+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* =========================================================
+   1. TOKEN, LATAR, SKRIN DAN KOMPONEN UMUM (sama seperti Modul 01–04)
+   ========================================================= */
+:root{
+  --bg:#071426; --bg2:#10233D; --gold:#D6AD55; --gold-light:#F0D28E;
+  --cyan:#53D8E8; --white:#F5F7FA; --muted:#A9B7C9;
+  --panel:rgba(16,35,61,.72); --line:rgba(83,216,232,.28);
+  --ok:#4ade80; --bad:#f87171;
+  --radius:16px;
+  --font-display:'Orbitron','Segoe UI',system-ui,sans-serif;
+  --font-body:'Nunito Sans','Segoe UI',system-ui,-apple-system,Roboto,Arial,sans-serif;
+  --ease:cubic-bezier(.22,.8,.26,1);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--bg);color:var(--white);font-family:var(--font-body);font-size:16px;line-height:1.6;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+img{max-width:100%;display:block}
+button,a,textarea,select{font:inherit}
+button,a{cursor:pointer}
+:focus-visible{outline:3px solid var(--cyan);outline-offset:3px}
+
+/* =========================================================
+   2. LATAR BELAKANG
+   ========================================================= */
+.bg-layer{position:fixed;inset:0;pointer-events:none;z-index:0}
+.bg-gradient{background:radial-gradient(ellipse 80% 60% at 50% -10%,rgba(83,216,232,.16),transparent 60%),radial-gradient(ellipse 60% 50% at 100% 100%,rgba(214,173,85,.10),transparent 60%),linear-gradient(180deg,var(--bg) 0%,#0a1a30 60%,var(--bg) 100%)}
+.bg-grid{background-image:linear-gradient(rgba(83,216,232,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(83,216,232,.06) 1px,transparent 1px);background-size:48px 48px;mask-image:radial-gradient(ellipse at center,#000 30%,transparent 80%);-webkit-mask-image:radial-gradient(ellipse at center,#000 30%,transparent 80%)}
+#particles{position:fixed;inset:0;z-index:0;pointer-events:none}
+.bg-scan{overflow:hidden}
+.bg-scan::before{content:"";position:absolute;left:0;right:0;height:140px;top:-140px;background:linear-gradient(180deg,transparent,rgba(83,216,232,.07),transparent);animation:scanMove 7s linear infinite}
+.bg-scan::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(255,255,255,.018) 0 1px,transparent 1px 3px)}
+@keyframes scanMove{to{transform:translateY(calc(100vh + 280px))}}
+
+/* =========================================================
+   3. SISTEM SKRIN
+   ========================================================= */
+.app{position:relative;z-index:1;min-height:100vh;min-height:100dvh;overflow-x:hidden;overflow-x:clip}
+.screen{display:none;min-height:100vh;min-height:100dvh;flex-direction:column;align-items:center;justify-content:center;padding:32px 16px 40px}
+.screen.active{display:flex;animation:screenIn .6s var(--ease) both}
+.screen.top{justify-content:flex-start;padding-top:24px}
+@keyframes screenIn{from{opacity:0;transform:scale(1.015)}to{opacity:1;transform:none}}
+.container{width:100%;max-width:1180px;margin:0 auto}
+.curtain{position:fixed;inset:0;z-index:50;pointer-events:none;background:var(--bg);opacity:0;transition:opacity .3s ease}
+.curtain.show{opacity:.85}
+
+/* =========================================================
+   4. KOMPONEN UMUM
+   ========================================================= */
+.eyebrow{font-family:var(--font-display);font-size:.72rem;letter-spacing:.32em;color:var(--cyan);text-transform:uppercase}
+.heading{font-family:var(--font-display);font-weight:800;font-size:clamp(1.45rem,4vw,2.4rem);letter-spacing:.06em;color:var(--gold);text-shadow:0 0 24px rgba(214,173,85,.35);line-height:1.2}
+.sub{color:var(--muted);font-size:clamp(.95rem,2vw,1.08rem)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);box-shadow:0 20px 60px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.04);position:relative}
+.hud::before,.hud::after{content:"";position:absolute;width:22px;height:22px;border:2px solid var(--gold);pointer-events:none}
+.hud::before{top:-1px;left:-1px;border-right:0;border-bottom:0;border-top-left-radius:var(--radius)}
+.hud::after{bottom:-1px;right:-1px;border-left:0;border-top:0;border-bottom-right-radius:var(--radius)}
+.btn-row{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:24px}
+.btn{min-height:48px;padding:12px 24px;border-radius:999px;font-family:var(--font-display);font-size:.8rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;border:1.5px solid var(--cyan);background:rgba(83,216,232,.06);color:var(--cyan);text-decoration:none;display:inline-flex;align-items:center;justify-content:center;text-align:center;transition:transform .2s var(--ease),background .2s,box-shadow .2s,color .2s,opacity .2s}
+.btn:hover{background:rgba(83,216,232,.16);box-shadow:0 0 22px rgba(83,216,232,.35);transform:translateY(-2px)}
+.btn-gold{border-color:var(--gold);color:#1a1205;background:linear-gradient(135deg,var(--gold-light),var(--gold) 55%,#b48a35)}
+.btn-gold:hover{background:linear-gradient(135deg,#fff0c4,var(--gold-light) 50%,var(--gold));box-shadow:0 0 28px rgba(214,173,85,.5);color:#1a1205}
+.btn-ghost{border-color:rgba(169,183,201,.5);color:var(--muted);background:transparent}
+.btn-ghost:hover{color:var(--white);border-color:var(--white);background:rgba(255,255,255,.06);box-shadow:none}
+.btn-lg{min-height:58px;padding:16px 40px;font-size:1rem}
+.btn[disabled]{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none}
+.btn[hidden]{display:none}
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+@keyframes cardIn{to{opacity:1;transform:none}}
+.hint{font-size:.85rem;color:var(--muted);text-align:center;margin-top:10px}
+
+/* =========================================================
+   2. INTRO & ANIMASI PEMBUKAAN
+   ========================================================= */
+#intro{text-align:center}
+.emblem{width:124px;height:124px;margin:0 auto 24px;animation:fadeUp 1s var(--ease) both}
+.emblem svg{width:100%;height:100%;filter:drop-shadow(0 0 18px rgba(83,216,232,.55))}
+.emblem .ring{animation:spin 18s linear infinite;transform-origin:50% 50%}
+.emblem .ring2{animation:spin 9s linear infinite reverse;transform-origin:50% 50%}
+@keyframes spin{to{transform:rotate(360deg)}}
+.intro-title{font-family:var(--font-display);font-weight:800;font-size:clamp(1.7rem,7vw,4rem);letter-spacing:.1em;line-height:1.08;background:linear-gradient(100deg,#9c7628 0%,var(--gold) 25%,#fff3cf 45%,var(--gold) 60%,#9c7628 100%);background-size:250% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:titleReveal 1.4s var(--ease) .3s both,shine 5s linear 1.8s infinite}
+@keyframes titleReveal{from{opacity:0;letter-spacing:.5em;filter:blur(10px)}to{opacity:1;letter-spacing:.1em;filter:none}}
+@keyframes shine{to{background-position:-250% 0}}
+.intro-mission{margin-top:14px;font-family:var(--font-display);font-weight:600;font-size:clamp(.78rem,2.5vw,1.15rem);letter-spacing:.14em;color:var(--cyan);animation:fadeUp .9s var(--ease) 1s both}
+.intro-story{max-width:700px;margin:26px auto 0;padding:clamp(20px,3.5vw,32px);text-align:left;animation:fadeUp .9s var(--ease) 1.3s both}
+.intro-story p{margin-bottom:10px}
+.intro-story p:first-child{font-weight:800;color:var(--gold);font-size:1.1rem}
+.intro-story p:last-child{margin-bottom:0;color:var(--cyan);font-weight:700}
+.tiers{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:18px;animation:fadeUp .9s var(--ease) 1.45s both}
+.tiers span{padding:6px 12px;border-radius:999px;border:1px solid var(--line);font:700 .66rem var(--font-display);letter-spacing:.1em;color:var(--muted)}
+#intro .btn-row{animation:fadeUp .9s var(--ease) 1.6s both}
+.boot{position:fixed;inset:0;z-index:70;display:grid;place-items:center;background:rgba(3,10,20,.92);opacity:0;visibility:hidden;transition:opacity .3s,visibility 0s linear .3s}
+.boot.show{opacity:1;visibility:visible;transition:opacity .3s}
+.boot-box{width:min(420px,86vw);text-align:center}
+.boot-box p{font:700 .8rem var(--font-display);letter-spacing:.26em;color:var(--cyan);margin-bottom:14px}
+.boot-box .progress i{transition:width 1.1s linear}
+.boot-box small{display:block;margin-top:10px;color:var(--muted);font-size:.8rem;letter-spacing:.1em}
+
+/* =========================================================
+   3. PENDAFTARAN & PENGESAHAN
+   ========================================================= */
+.form-card{width:100%;max-width:560px;margin:0 auto;padding:clamp(20px,4vw,34px)}
+.form-card .heading{margin:6px 0 4px}
+.field{margin-top:18px}
+.field label{display:block;font-weight:800;margin-bottom:6px}
+.field input,.field select{width:100%;min-height:50px;border-radius:12px;border:1.5px solid var(--line);background:rgba(7,20,38,.75);color:var(--white);padding:12px 14px;font:inherit;font-size:1rem}
+.field input:focus,.field select:focus{outline:none;border-color:var(--cyan);box-shadow:0 0 0 3px rgba(83,216,232,.2)}
+.field select option{background:#10233D;color:var(--white)}
+.field .err{display:none;margin-top:6px;font-size:.85rem;color:#fca5a5}
+.field.bad input,.field.bad select{border-color:var(--bad)}
+.field.bad .err{display:block}
+.id-card{margin:18px 0 4px;padding:18px;border-radius:14px;border:1.5px solid var(--gold);background:linear-gradient(160deg,rgba(214,173,85,.12),rgba(7,20,38,.6))}
+.id-card div{display:grid;grid-template-columns:120px 1fr;gap:10px;padding:6px 0;border-bottom:1px dashed rgba(214,173,85,.3)}
+.id-card div:last-child{border-bottom:0}
+.id-card dt{color:var(--muted)} .id-card dd{font-weight:800;word-break:break-word}
+
+/* =========================================================
+   4. PETA TAHAP
+   ========================================================= */
+.agentbar{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;justify-content:space-between;padding:10px 16px;margin-bottom:18px;font-size:.88rem}
+.agentbar b{color:var(--gold)}
+.agentbar .btn{min-height:40px;padding:8px 16px;font-size:.66rem}
+.lv-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.lv-card{padding:20px 18px;border-radius:var(--radius);border:1.5px solid var(--line);background:linear-gradient(160deg,rgba(16,35,61,.95),rgba(7,20,38,.9));display:flex;flex-direction:column;gap:8px;position:relative}
+.lv-card .eyebrow{font-size:.62rem}
+.lv-card h3{font:800 1.02rem var(--font-display);letter-spacing:.06em;color:var(--gold);line-height:1.3}
+.lv-card p{font-size:.88rem;color:var(--muted)}
+.lv-card ul{list-style:none;font-size:.84rem;display:grid;gap:2px}
+.lv-card .state{align-self:flex-start;font:700 .6rem var(--font-display);letter-spacing:.12em;padding:4px 8px;border-radius:6px}
+.lv-card .state.open{background:rgba(83,216,232,.15);color:var(--cyan);border:1px solid rgba(83,216,232,.45)}
+.lv-card .state.pass{background:var(--ok);color:var(--bg)}
+.lv-card .state.lock{background:rgba(169,183,201,.15);color:var(--muted);border:1px solid rgba(169,183,201,.35)}
+.lv-card.locked{opacity:.55}
+.lv-card.locked h3{color:var(--muted)}
+.lv-card.passed{border-color:var(--ok)}
+.lv-card .best{font-weight:800}
+.lv-card .best b{color:var(--gold)}
+.lv-card .btn{margin-top:auto}
+.lock-ico{width:16px;height:16px;vertical-align:-3px;margin-right:4px;fill:none;stroke:currentColor;stroke-width:2}
+
+/* =========================================================
+   5. KAD SOALAN
+   ========================================================= */
+.quiz{max-width:800px;margin:0 auto;padding:clamp(18px,3.5vw,32px)}
+.q-top{display:flex;justify-content:space-between;gap:10px;font-size:.88rem;color:var(--muted);margin-bottom:8px}
+.q-top b{color:var(--gold)}
+.fact-card{margin:16px 0;padding:18px;border-radius:14px;border:1.5px solid var(--gold);background:linear-gradient(160deg,rgba(214,173,85,.12),rgba(7,20,38,.6));position:relative}
+.fact-card .eyebrow{color:var(--gold);font-size:.62rem}
+.fact-card p{font-size:clamp(1.05rem,2.6vw,1.3rem);font-weight:800;margin-top:6px}
+.q-ask{font-weight:700;margin-bottom:10px}
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.opt{text-align:left;min-height:56px;padding:10px 14px;border-radius:12px;border:1.5px solid var(--line);background:rgba(7,20,38,.6);color:var(--white);display:flex;gap:12px;align-items:center;transition:border-color .2s,background .2s,transform .2s}
+.opt:hover:not([disabled]){border-color:var(--cyan);background:rgba(83,216,232,.08);transform:translateY(-2px)}
+.opt .k{flex:0 0 30px;height:30px;border-radius:50%;display:grid;place-items:center;font:800 .78rem var(--font-display);background:rgba(83,216,232,.15);color:var(--cyan)}
+.opt.sel{border-color:var(--gold);background:rgba(214,173,85,.12)}
+.opt.sel .k{background:var(--gold);color:#1a1205}
+.opt.correct{border-color:var(--ok);background:rgba(74,222,128,.12)}
+.opt.correct .k{background:var(--ok);color:var(--bg)}
+.opt.wrong{border-color:var(--bad);background:rgba(248,113,113,.12)}
+.opt.wrong .k{background:var(--bad);color:var(--bg)}
+.opt[disabled]{cursor:default}
+.feedback{margin-top:14px;padding:12px 14px;border-radius:10px;display:none}
+.feedback.show{display:block;animation:fadeUp .4s var(--ease) both}
+.feedback b{display:block;margin-bottom:4px}
+.feedback.ok{background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.4)}
+.feedback.ok b{color:var(--ok)}
+.feedback.no{background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.4)}
+.feedback.no b{color:#fca5a5}
+.feedback small{display:block;margin-top:6px;color:var(--muted);font-size:.78rem}
+.q-done{text-align:center}
+.q-done .big{font:800 2.2rem var(--font-display);color:var(--gold);margin:8px 0}
+.qprog{display:flex;gap:6px;margin:6px 0 4px}
+.qprog span{flex:1;height:8px;border-radius:99px;background:rgba(7,20,38,.8);border:1px solid var(--line)}
+.qprog span.on{background:var(--cyan);border-color:var(--cyan);box-shadow:0 0 10px rgba(83,216,232,.6)}
+.qprog span.ok{background:var(--ok);border-color:var(--ok)}
+.qprog span.no{background:var(--bad);border-color:var(--bad)}
+.qtype{display:inline-block;font:700 .6rem var(--font-display);letter-spacing:.12em;color:var(--gold);border:1px solid rgba(214,173,85,.5);border-radius:6px;padding:3px 8px;margin-top:10px}
+.fact-card .eyebrow{color:var(--cyan)}
+.fact-card .data{margin-top:10px;display:grid;gap:4px;font-size:.92rem}
+.fact-card .data div{display:flex;justify-content:space-between;gap:10px;padding:6px 10px;border-radius:8px;background:rgba(7,20,38,.55)}
+.fact-card .data b{color:var(--gold-light);white-space:nowrap}
+.opt{min-height:60px}
+.opt .t{line-height:1.35}
+.mrow{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:center;padding:10px 12px;border-radius:12px;border:1.5px solid var(--line);background:rgba(7,20,38,.6);margin-bottom:10px}
+.mrow .lhs{font-weight:800}
+.mrow select{width:100%;min-height:46px;border-radius:10px;border:1.5px solid var(--line);background:rgba(16,35,61,.95);color:var(--white);padding:8px 10px;font:inherit;font-size:.95rem}
+.mrow select option{background:#10233D}
+.mrow.correct{border-color:var(--ok);background:rgba(74,222,128,.1)}
+.mrow.wrong{border-color:var(--bad);background:rgba(248,113,113,.1)}
+.mrow .fix{grid-column:1/-1;font-size:.84rem;color:var(--ok);display:none}
+.mrow.wrong .fix{display:block}
+.srcline{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:8px;font-size:.78rem;color:var(--muted)}
+.tag{display:inline-block;font:700 .56rem var(--font-display);letter-spacing:.1em;padding:3px 7px;border-radius:5px}
+.tag.tb{background:rgba(83,216,232,.15);color:var(--cyan);border:1px solid rgba(83,216,232,.4)}
+.tag.ap{background:rgba(214,173,85,.15);color:var(--gold);border:1px solid rgba(214,173,85,.45)}
+.q-actions{display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-end;margin-top:18px}
+.q-actions .btn{min-width:180px}
+
+/* =========================================================
+   6. KEPUTUSAN TAHAP
+   ========================================================= */
+.lres{max-width:640px;margin:0 auto;padding:clamp(22px,4vw,36px);text-align:center}
+.lres .big{font:800 clamp(2.2rem,8vw,3.4rem) var(--font-display);margin:10px 0 2px}
+.lres.pass .big{color:var(--ok)} .lres.fail .big{color:var(--bad)}
+.lres .verdict{font:800 1.05rem var(--font-display);letter-spacing:.12em}
+.lres.pass .verdict{color:var(--ok)} .lres.fail .verdict{color:#fca5a5}
+.lres .msg{margin-top:10px;color:var(--muted)}
+.lres .bestline{margin-top:8px;font-weight:700}
+.lres .bestline b{color:var(--gold)}
+
+/* =========================================================
+   7. KEPUTUSAN AKHIR
+   ========================================================= */
+.final{max-width:900px;margin:0 auto;padding:clamp(20px,4vw,36px);text-align:center}
+.badge{width:140px;height:140px;margin:8px auto 12px;border-radius:50%;display:grid;place-items:center;position:relative}
+.badge svg{width:66px;height:66px}
+.badge.lv1{background:radial-gradient(circle at 35% 30%,#e3e9f1,#A9B7C9 50%,#55657a);box-shadow:0 0 26px rgba(169,183,201,.35)}
+.badge.lv1 svg{fill:#1b2533}
+.badge.lv2{background:radial-gradient(circle at 35% 30%,#d8fbff,var(--cyan) 50%,#1b6b75);box-shadow:0 0 36px rgba(83,216,232,.5)}
+.badge.lv2 svg{fill:#06323a}
+.badge.lv3{background:radial-gradient(circle at 35% 30%,#fff3cf,var(--gold) 45%,#8a6420);box-shadow:0 0 44px rgba(214,173,85,.65)}
+.badge.lv3 svg{fill:#1a1205}
+.badge.lv4{background:radial-gradient(circle at 35% 30%,#fff8e1,var(--gold-light) 35%,var(--gold) 60%,#6e4f16);box-shadow:0 0 50px rgba(214,173,85,.8),0 0 0 6px rgba(83,216,232,.6),0 0 40px 10px rgba(83,216,232,.35);animation:pulse 2.2s ease-in-out infinite}
+.badge.lv4 svg{fill:#1a1205}
+.badge.lv4::after{content:"";position:absolute;inset:-14px;border-radius:50%;border:2px dashed var(--cyan);animation:spin 12s linear infinite}
+@keyframes pulse{50%{box-shadow:0 0 70px rgba(214,173,85,1),0 0 0 6px rgba(83,216,232,.8),0 0 50px 14px rgba(83,216,232,.45)}}
+.badge-name{font:800 clamp(1.1rem,3.4vw,1.6rem) var(--font-display);letter-spacing:.1em;color:var(--gold)}
+.who{margin:14px auto 0;max-width:560px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.who div{padding:10px 12px;border-radius:12px;background:rgba(7,20,38,.6);border:1px solid var(--line);text-align:left}
+.who span{display:block;font-size:.74rem;color:var(--muted)}
+.who b{word-break:break-word}
+.res-table{width:100%;border-collapse:collapse;margin:18px 0 6px;font-size:.95rem}
+.res-table th,.res-table td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:left}
+.res-table th{font:700 .66rem var(--font-display);letter-spacing:.12em;color:var(--cyan)}
+.res-table td.n{text-align:right;font-weight:800}
+.res-table tr.tot td{color:var(--gold);font-size:1.05rem;border-bottom:0}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:14px 0}
+.stats div{padding:12px 8px;border-radius:12px;background:rgba(7,20,38,.6);border:1px solid var(--line)}
+.stats span{display:block;font-size:.76rem;color:var(--muted)}
+.stats b{font:800 1.3rem var(--font-display)}
+.stats .g b{color:var(--ok)} .stats .r b{color:var(--bad)} .stats .t b{color:var(--gold)} .stats .p b{color:var(--cyan)}
+.ranks{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:8px;text-align:left}
+.ranks div{padding:10px;border-radius:10px;border:1px solid rgba(169,183,201,.25);font-size:.8rem;color:var(--muted);opacity:.7}
+.ranks div b{display:block;font:700 .64rem var(--font-display);letter-spacing:.08em;color:var(--white)}
+.ranks div.me{opacity:1;border-color:var(--gold);background:rgba(214,173,85,.1);color:var(--white)}
+.ranks div.me b{color:var(--gold)}
+.closing{margin-top:18px;padding:16px;border-radius:12px;border:1px dashed var(--cyan);background:rgba(83,216,232,.06);text-align:left}
+.closing p:first-child{font-weight:800;color:var(--gold);font-size:1.08rem;margin-bottom:4px}
+.log{margin-top:18px;text-align:left}
+.log h3{font:700 .72rem var(--font-display);letter-spacing:.18em;color:var(--cyan);margin-bottom:6px}
+.log table{width:100%;border-collapse:collapse;font-size:.85rem}
+.log th,.log td{padding:7px 8px;border-bottom:1px solid rgba(83,216,232,.15);text-align:left}
+.log th{color:var(--muted);font-weight:700}
+.log .ok{color:var(--ok);font-weight:800} .log .no{color:#fca5a5;font-weight:800}
+.stamp{margin-top:8px;font-size:.78rem;color:var(--muted)}
+
+/* =========================================================
+   8. BUNYI & RESPONSIF
+   ========================================================= */
+/* ---------- Kawalan bunyi ---------- */
+.snd{position:fixed;top:12px;right:12px;z-index:85;display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.snd-btn{width:46px;height:46px;border-radius:50%;border:1.5px solid rgba(169,183,201,.5);background:rgba(16,35,61,.92);color:var(--muted);display:grid;place-items:center;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.35);transition:border-color .2s,color .2s,box-shadow .2s}
+.snd-btn svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.snd-btn.on{border-color:var(--cyan);color:var(--cyan);box-shadow:0 0 18px rgba(83,216,232,.45)}
+.snd-panel{width:240px;padding:14px;border-radius:14px;background:rgba(16,35,61,.98);border:1px solid var(--gold);box-shadow:0 16px 40px rgba(0,0,0,.5);color:var(--white)}
+.snd-panel[hidden]{display:none}
+.snd-panel .ttl{font:600 .66rem var(--font-display);letter-spacing:.2em;color:var(--gold);margin-bottom:10px}
+.snd-panel .row{display:flex;gap:8px}
+.snd-panel .btn{flex:1;min-height:38px;padding:6px 8px;font-size:.6rem;letter-spacing:.08em}
+.snd-panel .btn[aria-pressed="true"]{background:var(--cyan);border-color:var(--cyan);color:var(--bg)}
+.snd-panel label{display:flex;justify-content:space-between;font:600 .62rem var(--font-display);letter-spacing:.14em;color:var(--muted);margin:14px 0 6px}
+.snd-panel input[type=range]{width:100%;accent-color:var(--gold);height:28px}
+.snd-panel .note{font-size:.74rem;color:var(--muted);margin-top:8px;line-height:1.4}
+@media (max-width:1340px){ .agentbar{margin-right:58px} }
+@media (max-width:900px){
+  .screen,.screen.top{padding-top:72px}
+  .agentbar{margin-right:0}
+  .lv-grid{grid-template-columns:1fr}
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .ranks{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:560px){
+  .opts{grid-template-columns:1fr}
+  .mrow{grid-template-columns:1fr}
+  .who{grid-template-columns:1fr}
+  .id-card div{grid-template-columns:1fr;gap:0}
+  .q-actions .btn{flex:1 1 100%}
+  .agentbar .btn{width:100%}
+  .res-table th,.res-table td{padding:8px 6px}
+}
+@media print{
+  .bg-layer,#particles,.snd,.btn-row,.agentbar .btn{display:none!important}
+  body{background:#fff;color:#000}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;animation-delay:0s!important;transition-duration:.001ms!important}
+  .bg-scan::before{display:none}
+}
+</style>
+</head>
+<body>
+
+<div class="bg-layer bg-gradient" aria-hidden="true"></div>
+<div class="bg-layer bg-grid" aria-hidden="true"></div>
+<canvas id="particles" aria-hidden="true"></canvas>
+<div class="bg-layer bg-scan" aria-hidden="true"></div>
+<div class="curtain" id="curtain" aria-hidden="true"></div>
+
+<main class="app">
+
+  <!-- ================= INTRO ================= -->
+  <section class="screen active" id="intro" aria-label="Pengenalan Final Mission">
+    <div class="container">
+      <div class="emblem" aria-hidden="true">
+        <svg viewBox="0 0 120 120">
+          <g class="ring"><circle cx="60" cy="60" r="55" fill="none" stroke="#53D8E8" stroke-width="1.5" stroke-dasharray="6 8"/></g>
+          <g class="ring2"><circle cx="60" cy="60" r="49" fill="none" stroke="#D6AD55" stroke-width="1" stroke-dasharray="2 10"/></g>
+          <circle cx="60" cy="60" r="42" fill="#10233D" stroke="#D6AD55" stroke-width="2.5"/>
+          <path d="M60 30l7 14.5 16 2.3-11.6 11.3 2.7 15.9L60 66.5l-14.1 7.5 2.7-15.9L37 46.8l16-2.3z" fill="none" stroke="#D6AD55" stroke-width="2.5" stroke-linejoin="round"/>
+          <text x="60" y="94" text-anchor="middle" font-family="Orbitron,sans-serif" font-size="11" font-weight="800" fill="#53D8E8" letter-spacing="2">05</text>
+        </svg>
+      </div>
+      <span class="eyebrow">Agent History Academy · Modul 05</span>
+      <h1 class="intro-title">FINAL MISSION</h1>
+      <p class="intro-mission">MISI PENENTUAN EJEN SEJARAH</p>
+      <div class="panel hud intro-story">
+        <p>Perhatian, Ejen!</p>
+        <p>Kamu telah berjaya melepasi beberapa misi terdahulu. Kini tiba masanya untuk membuktikan penguasaan kamu tentang sejarah kepimpinan negara Malaysia.</p>
+        <p>Selesaikan tiga tahap cabaran untuk memperoleh pengiktirafan sebagai Ejen Sejarah.</p>
+      </div>
+      <div class="tiers" aria-label="Tahap cabaran">
+        <span>TAHAP 1 · REKRUT</span><span>TAHAP 2 · EJEN KHAS</span><span>TAHAP 3 · EJEN ELIT</span>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-gold btn-lg" id="btnStart" type="button">Mula Misi</button>
+        <a class="btn btn-ghost" data-hq href="#">Kembali ke Pusat Misi</a>
+      </div>
+      <p class="hint">Sejarah Tahun 6 · Tajuk 12: Pencapaian dan Kebanggaan Negara · Unit 7: Pemimpin Negara Malaysia</p>
+    </div>
+  </section>
+
+  <!-- ================= PENDAFTARAN ================= -->
+  <section class="screen" id="reg" aria-label="Pendaftaran Ejen">
+    <div class="container">
+      <form class="panel hud form-card" id="regForm" novalidate>
+        <span class="eyebrow">Langkah 1 · Pendaftaran Ejen</span>
+        <h2 class="heading">DAFTAR EJEN</h2>
+        <p class="sub">Isi nama penuh dan pilih kelas sebelum memulakan misi.</p>
+        <div class="field" id="fName">
+          <label for="inName">Nama penuh murid</label>
+          <input id="inName" type="text" maxlength="80" autocomplete="name" placeholder="Contoh: Nur Aisyah binti Ahmad" aria-describedby="errName">
+          <p class="err" id="errName">Sila isi nama penuh kamu.</p>
+        </div>
+        <div class="field" id="fClass">
+          <label for="inClass">Kelas</label>
+          <select id="inClass" aria-describedby="errClass">
+            <option value="">– Pilih kelas –</option>
+            <option value="6 Al Farabi">6 Al Farabi</option>
+            <option value="6 Al Ghazali">6 Al Ghazali</option>
+            <option value="6 Al Syafie">6 Al Syafie</option>
+          </select>
+          <p class="err" id="errClass">Sila pilih kelas kamu.</p>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-ghost" type="button" data-go="intro">‹ Kembali</button>
+          <button class="btn btn-gold" type="submit" id="btnReg" disabled>Seterusnya ›</button>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <!-- ================= PENGESAHAN ================= -->
+  <section class="screen" id="confirm" aria-label="Pengesahan Ejen">
+    <div class="container">
+      <div class="panel hud form-card">
+        <span class="eyebrow">Langkah 2 · Pengesahan</span>
+        <h2 class="heading">SAHKAN MAKLUMAT EJEN</h2>
+        <dl class="id-card">
+          <div><dt>Nama</dt><dd id="cName"></dd></div>
+          <div><dt>Kelas</dt><dd id="cClass"></dd></div>
+          <div><dt>Cabaran</dt><dd>3 tahap · 15 soalan · 30 markah</dd></div>
+        </dl>
+        <p class="hint" style="text-align:left">Syarat: lulus sekurang-kurangnya 60% bagi setiap tahap untuk membuka tahap seterusnya.</p>
+        <div class="btn-row">
+          <button class="btn btn-ghost" type="button" data-go="reg">Ubah Maklumat</button>
+          <button class="btn btn-gold" type="button" id="btnConfirm">Sahkan &amp; Mula</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= PETA TAHAP ================= -->
+  <section class="screen top" id="map" aria-label="Peta Tahap Cabaran">
+    <div class="container">
+      <div class="panel agentbar"><span>Ejen: <b data-name></b> · Kelas: <b data-class></b></span><span>Jumlah terbaik: <b id="mapTotal">0</b> / 30</span><a class="btn btn-ghost" data-hq href="#">Kembali ke Pusat Misi</a></div>
+      <div class="zone-head" style="text-align:center;margin-bottom:18px">
+        <span class="eyebrow">Peta Misi</span>
+        <h2 class="heading">TIGA TAHAP CABARAN</h2>
+        <p class="sub">Selesaikan tahap mengikut urutan. Markah terbaik setiap tahap disimpan.</p>
+      </div>
+      <div class="lv-grid" id="lvGrid"></div>
+      <div class="btn-row" id="mapFinal" hidden>
+        <button class="btn btn-gold btn-lg" type="button" id="btnShowFinal">Lihat Keputusan Akhir</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= SOALAN ================= -->
+  <section class="screen top" id="quiz" aria-label="Soalan Cabaran">
+    <div class="container">
+      <div class="panel agentbar"><span>Ejen: <b data-name></b> · Kelas: <b data-class></b></span><span id="qLevelTag"></span><a class="btn btn-ghost" data-hq href="#">Kembali ke Pusat Misi</a></div>
+      <div class="panel hud quiz" id="quizBox" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <!-- ================= KEPUTUSAN TAHAP ================= -->
+  <section class="screen" id="lresult" aria-label="Keputusan Tahap">
+    <div class="container">
+      <div class="panel hud lres" id="lresBox"></div>
+    </div>
+  </section>
+
+  <!-- ================= KEPUTUSAN AKHIR ================= -->
+  <section class="screen top" id="final" aria-label="Keputusan Akhir">
+    <div class="container">
+      <div class="panel hud final" id="finalBox">
+        <span class="eyebrow">Final Mission · Keputusan Akhir</span>
+        <h2 class="heading">PENGIKTIRAFAN EJEN SEJARAH</h2>
+        <div class="badge" id="badge" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 16.9 6.1 20l1.2-6.5L2.5 8.9 9.1 8z"/></svg></div>
+        <p class="badge-name" id="badgeName"></p>
+        <div class="who">
+          <div><span>Nama murid</span><b id="fName2"></b></div>
+          <div><span>Kelas</span><b id="fClass2"></b></div>
+        </div>
+        <table class="res-table" aria-label="Markah setiap tahap">
+          <thead><tr><th>Tahap</th><th>Status</th><th style="text-align:right">Markah</th></tr></thead>
+          <tbody id="fRows"></tbody>
+        </table>
+        <div class="stats">
+          <div class="t"><span>Jumlah markah</span><b id="fTotal">0/30</b></div>
+          <div class="p"><span>Peratus</span><b id="fPct">0%</b></div>
+          <div class="g"><span>Jawapan betul</span><b id="fRight">0</b></div>
+          <div class="r"><span>Jawapan salah</span><b id="fWrong">0</b></div>
+        </div>
+        <div class="ranks" id="ranks">
+          <div data-rk="1"><b>EJEN PELATIH</b>0–11 markah</div>
+          <div data-rk="2"><b>EJEN BERPENGALAMAN</b>12–20 markah</div>
+          <div data-rk="3"><b>EJEN PAKAR</b>21–26 markah</div>
+          <div data-rk="4"><b>EJEN LEGENDA</b>27–30 markah</div>
+        </div>
+        <div class="closing"><p id="fMsgHead"></p><p id="fMsg"></p></div>
+        <div class="log">
+          <h3>REKOD KEPUTUSAN SESI</h3>
+          <table><thead><tr><th>#</th><th>Tahap</th><th>Markah</th><th>Status</th><th>Masa</th></tr></thead><tbody id="logRows"></tbody></table>
+          <p class="stamp" id="fStamp"></p>
+        </div>
+        <div class="btn-row">
+          <button class="btn" type="button" id="btnRetry">Cuba Lagi</button>
+          <a class="btn btn-gold" data-hq href="#">Kembali ke Pusat Misi</a>
+        </div>
+        <p class="hint">Keputusan dipaparkan pada peranti ini sahaja. Guru boleh menyemak skrin ini atau murid boleh mengambil tangkapan skrin.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- ================= PEMUATAN MISI ================= -->
+<div class="boot" id="boot" aria-hidden="true">
+  <div class="boot-box">
+    <p>MEMULAKAN MISI…</p>
+    <div class="progress"><i id="bootFill"></i></div>
+    <small>MENYAMBUNG KE ARKIB SEJARAH NEGARA</small>
+  </div>
+</div>
+
+<!-- ================= KAWALAN BUNYI ================= -->
+<div class="snd" id="snd">
+  <button class="snd-btn" type="button" id="sndBtn" aria-expanded="false" aria-controls="sndPanel" aria-label="Tetapan bunyi (bunyi dimatikan)"></button>
+  <div class="snd-panel" id="sndPanel" role="group" aria-label="Tetapan bunyi" hidden>
+    <div class="ttl">BUNYI</div>
+    <div class="row">
+      <button class="btn" type="button" id="sndOn" aria-pressed="false">Sound On</button>
+      <button class="btn" type="button" id="sndOff" aria-pressed="true">Sound Off</button>
+    </div>
+    <label for="sndVol"><span>VOLUME</span><span id="sndVolTxt">100%</span></label>
+    <input type="range" id="sndVol" min="0" max="100" step="1" value="100">
+    <p class="note" id="sndNote">Bunyi berhenti apabila kamu meninggalkan modul ini atau membuka halaman lain.</p>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   AGENT HISTORY ACADEMY – MODUL 05: FINAL MISSION
+   Sejarah Tahun 6 · Tajuk 12 · Unit 7: Pemimpin Negara Malaysia
+   ========================================================= */
+
+/* URL Pusat Misi (laman utama Google Sites) – sama seperti Modul 02, 03 dan 04 */
+var MODULE01_URL = 'https://sites.google.com/moe-dl.edu.my/ejen-akademi-sejarah/';
+
+/* ---------------------------------------------------------
+   SUMBER
+   BT  = Buku Teks Sejarah Tahun 6 (KPM), Unit 7, ms. 106–115
+   P01 = PDF 01 Nota Pembelajaran · P02 = PDF 02 Bidang Tugas, Sumbangan
+         dan Pencapaian · P03 = PDF 03 Lembaran Aktiviti
+   kind 'tb' = fakta buku teks; kind 'ap' = soalan aplikasi/interpretasi
+   yang jawapannya dibina daripada fakta buku teks.
+   --------------------------------------------------------- */
+var LEVELS = [
+  { id:1, code:'TAHAP 1', name:'REKRUT: KENALI PEMIMPIN', aras:'Aras rendah', per:1, pass:3, max:5,
+    desc:'Nama Perdana Menteri, biodata ringkas dan kedudukan mengikut kronologi.',
+    Q:[
+      { t:'mcq', q:'Siapakah Perdana Menteri Pertama Malaysia?',
+        opts:['Tun Abdul Razak bin Hussein','Tunku Abdul Rahman Putra Al-Haj','Tun Hussein Onn','Tun Dr. Mahathir bin Mohamad'], a:1,
+        why:'Tunku Abdul Rahman Putra Al-Haj ialah Perdana Menteri Pertama (31 Ogos 1957 – 22 September 1970).', kind:'tb', src:'Buku Teks ms. 109; PDF 01' },
+      { t:'mcq', q:'Tun Hussein Onn dilahirkan pada 12 Februari 1922. Di manakah beliau dilahirkan?',
+        opts:['Alor Setar, Kedah','Pulau Keladi, Pekan, Pahang','Johor Bahru, Johor','Muar, Johor'], a:2,
+        why:'Tun Hussein Onn dilahirkan di Johor Bahru, Johor. Muar, Johor ialah tempat lahir Tan Sri Mahiaddin.', kind:'tb', src:'Buku Teks ms. 111; PDF 01' },
+      { t:'mcq', q:'Siapakah Perdana Menteri Malaysia selepas Tun Abdul Razak bin Hussein?',
+        opts:['Tun Hussein Onn','Tun Abdullah bin Ahmad Badawi','Tunku Abdul Rahman Putra Al-Haj','Dato\' Sri Mohd Najib bin Tun Abdul Razak'], a:0,
+        why:'Tun Abdul Razak ialah Perdana Menteri Kedua (1970–1976). Beliau diikuti oleh Tun Hussein Onn, Perdana Menteri Ketiga (1976–1981).', kind:'tb', src:'Buku Teks ms. 110–111; PDF 01 (ringkasan kronologi)' },
+      { t:'mcq', q:'Siapakah Perdana Menteri Kelima Malaysia?',
+        opts:['Tan Sri Mahiaddin bin Md Yassin','Dato\' Sri Mohd Najib bin Tun Abdul Razak','Tun Abdullah bin Ahmad Badawi','Tun Hussein Onn'], a:2,
+        why:'Tun Abdullah bin Ahmad Badawi ialah Perdana Menteri Kelima (31 Oktober 2003 – 3 April 2009).', kind:'tb', src:'Buku Teks ms. 113; PDF 01' },
+      { t:'mcq', q:'Tun Dr. Mahathir bin Mohamad memegang jawatan Perdana Menteri sebanyak dua penggal. Pada kedudukan manakah beliau?',
+        opts:['Ketiga dan keenam','Keempat dan ketujuh','Kedua dan kelima','Kelima dan kelapan'], a:1,
+        why:'Penggal pertama: Perdana Menteri Keempat (1981–2003). Penggal kedua: Perdana Menteri Ketujuh (2018–2020). Sepuluh kedudukan bukan sepuluh individu.', kind:'tb', src:'Buku Teks ms. 112 dan 114; PDF 01' }
+    ]},
+  { id:2, code:'TAHAP 2', name:'EJEN KHAS: JEJAK SUMBANGAN', aras:'Aras sederhana', per:2, pass:6, max:10,
+    desc:'Gelaran Perdana Menteri, sumbangan, pengalaman kepimpinan, gagasan dan pencapaian.',
+    Q:[
+      { t:'match', q:'Padankan gelaran dengan Perdana Menteri yang betul.',
+        pairs:[['Bapa Kemerdekaan','Tunku Abdul Rahman Putra Al-Haj'],['Bapa Pembangunan','Tun Abdul Razak bin Hussein'],['Bapa Perpaduan','Tun Hussein Onn']],
+        pool:['Tun Abdul Razak bin Hussein','Tun Abdullah bin Ahmad Badawi','Tunku Abdul Rahman Putra Al-Haj','Tun Hussein Onn'],
+        why:'Tunku Abdul Rahman – Bapa Kemerdekaan; Tun Abdul Razak – Bapa Pembangunan; Tun Hussein Onn – Bapa Perpaduan.', kind:'tb', src:'Buku Teks ms. 109–111; PDF 02' },
+      { t:'mcq', q:'Apakah gelaran yang diberikan kepada Tun Dr. Mahathir bin Mohamad atas sumbangan beliau kepada negara?',
+        opts:['Bapa Kemerdekaan','Bapa Pemodenan','Bapa Perpaduan','Bapa Pembangunan Modal Insan'], a:1,
+        why:'Tun Dr. Mahathir bin Mohamad mendapat gelaran Bapa Pemodenan atas sumbangan beliau kepada negara.', kind:'tb', src:'Buku Teks ms. 112; PDF 02' },
+      { t:'match', q:'Padankan gagasan atau gelaran dengan Perdana Menteri yang berkaitan.',
+        pairs:[['Gagasan 1Malaysia','Dato\' Sri Mohd Najib bin Tun Abdul Razak'],['Wawasan Kemakmuran Bersama 2030','Tun Dr. Mahathir bin Mohamad'],['Bapa Pembangunan Modal Insan','Tun Abdullah bin Ahmad Badawi']],
+        pool:['Tun Abdullah bin Ahmad Badawi','Tan Sri Mahiaddin bin Md Yassin','Dato\' Sri Mohd Najib bin Tun Abdul Razak','Tun Dr. Mahathir bin Mohamad'],
+        why:'Dato\' Sri Mohd Najib memperkenalkan Gagasan 1Malaysia. Tun Dr. Mahathir memperkenalkan Wawasan Kemakmuran Bersama 2030 dalam penggal kedua. Tun Abdullah mendapat gelaran Bapa Pembangunan Modal Insan.', kind:'tb', src:'Buku Teks ms. 113–114; PDF 02' },
+      { t:'mcq', q:'Sebelum menjadi Perdana Menteri, siapakah yang pernah berkhidmat sebagai pegawai perubatan di Alor Setar, Jitra dan Langkawi?',
+        opts:['Tun Hussein Onn','Tun Abdullah bin Ahmad Badawi','Tun Dr. Mahathir bin Mohamad','Tunku Abdul Rahman Putra Al-Haj'], a:2,
+        why:'Tun Dr. Mahathir bin Mohamad pernah berkhidmat sebagai pegawai perubatan dan kemudian sebagai Menteri Pelajaran Malaysia.', kind:'tb', src:'Buku Teks ms. 112; PDF 01' },
+      { t:'match', q:'Padankan pengalaman kepimpinan dengan Perdana Menteri yang betul.',
+        pairs:[['Ketua Menteri Persekutuan Tanah Melayu','Tunku Abdul Rahman Putra Al-Haj'],['Menteri Besar Johor','Tan Sri Mahiaddin bin Md Yassin'],['Setiausaha Majlis Gerakan Negara (MAGERAN)','Tun Abdullah bin Ahmad Badawi']],
+        pool:['Tan Sri Mahiaddin bin Md Yassin','Tun Hussein Onn','Tun Abdullah bin Ahmad Badawi','Tunku Abdul Rahman Putra Al-Haj'],
+        why:'Tunku Abdul Rahman pernah menjadi Ketua Menteri Persekutuan Tanah Melayu. Tan Sri Mahiaddin pernah menjadi Menteri Besar Johor. Tun Abdullah pernah menjadi Setiausaha MAGERAN.', kind:'tb', src:'Buku Teks ms. 109, 113 dan 115; PDF 02' }
+    ]},
+  { id:3, code:'TAHAP 3', name:'EJEN ELIT: MISI PENENTUAN', aras:'Aras tinggi', per:3, pass:9, max:15,
+    desc:'Situasi kepimpinan, interpretasi maklumat sejarah, menghubungkan pengalaman dengan sumbangan dan menghargai jasa pemimpin.',
+    Q:[
+      { t:'mcq', q:'Situasi: Seorang ahli Dewan Rakyat mendapat sokongan majoriti Ahli Dewan Rakyat. Siapakah yang akan melantik beliau secara rasmi sebagai Perdana Menteri?',
+        opts:['Ketua Menteri','Yang di-Pertuan Agong','Menteri Besar','Ahli Jemaah Menteri'], a:1,
+        why:'Perdana Menteri ialah ketua kerajaan. Beliau dilantik secara rasmi oleh Yang di-Pertuan Agong dan mesti mendapat sokongan majoriti Ahli Dewan Rakyat.', kind:'tb', src:'Buku Teks ms. 108; PDF 02; PDF 03 (Aktiviti 3)' },
+      { t:'mcq', q:'Tun Abdul Razak bin Hussein dan Dato\' Sri Mohd Najib bin Tun Abdul Razak pernah berkhidmat sebagai Menteri Besar bagi negeri yang sama. Pernyataan manakah yang paling tepat?',
+        opts:['Kedua-duanya mempunyai pengalaman memimpin negeri Johor.','Kedua-duanya pernah berkhidmat sebagai pegawai perubatan.','Kedua-duanya mempunyai pengalaman memimpin negeri Pahang sebelum menjadi Perdana Menteri.','Kedua-duanya menjadi Perdana Menteri dalam tahun yang sama.'], a:2,
+        why:'Buku teks menyatakan kedua-dua pemimpin pernah berkhidmat sebagai Menteri Besar Pahang. Tun Abdul Razak memimpin 1970–1976, manakala Dato\' Sri Mohd Najib memimpin 2009–2018.', kind:'ap', src:'Interpretasi berdasarkan Buku Teks ms. 110 dan 114; PDF 02' },
+      { t:'mcq', q:'Tun Dr. Mahathir bin Mohamad pernah berkhidmat sebagai pegawai perubatan dan Menteri Pelajaran Malaysia. Beliau kemudian mendapat gelaran Bapa Pemodenan. Apakah kesimpulan yang paling sesuai?',
+        opts:['Beliau hanya berpengalaman dalam bidang perubatan.','Pengalaman dalam pelbagai bidang membantu beliau memimpin dan memodenkan negara.','Gelaran itu diberikan kerana beliau Perdana Menteri Pertama.','Beliau tidak pernah memegang jawatan menteri.'], a:1,
+        why:'Buku teks mencatatkan pengalaman beliau dalam bidang perubatan dan sebagai menteri, serta gelaran Bapa Pemodenan. Hal ini menunjukkan pengalaman yang luas menyokong sumbangan beliau.', kind:'ap', src:'Interpretasi berdasarkan Buku Teks ms. 112; PDF 02' },
+      { t:'mcq', q:'Kaji tempoh perkhidmatan berikut. Siapakah yang memimpin negara paling lama dalam satu penggal?',
+        data:[['Tunku Abdul Rahman Putra Al-Haj','1957 – 1970'],['Tun Abdul Razak bin Hussein','1970 – 1976'],['Tun Dr. Mahathir bin Mohamad (penggal pertama)','1981 – 2003'],['Dato\' Sri Mohd Najib bin Tun Abdul Razak','2009 – 2018']],
+        opts:['Tunku Abdul Rahman Putra Al-Haj','Tun Abdul Razak bin Hussein','Tun Dr. Mahathir bin Mohamad','Dato\' Sri Mohd Najib bin Tun Abdul Razak'], a:2,
+        why:'Penggal pertama Tun Dr. Mahathir ialah 16 Julai 1981 – 30 Oktober 2003, iaitu lebih kurang 22 tahun. Tunku Abdul Rahman memimpin lebih kurang 13 tahun.', kind:'ap', src:'Interpretasi berdasarkan Buku Teks ms. 109–114; PDF 01 (ringkasan kronologi)' },
+      { t:'mcq', q:'Situasi: Sekolah kamu mengadakan Minggu Sejarah. Tindakan manakah yang paling sesuai untuk menghargai jasa Perdana Menteri Malaysia?',
+        opts:['Menyalin maklumat daripada sumber yang tidak sahih tanpa menyemaknya.','Menghasilkan buku skrap tentang sumbangan pemimpin berdasarkan fakta yang tepat.','Tidak mengambil tahu kerana peristiwa itu sudah lama berlaku.','Hanya menghafal nama pemimpin tanpa memahami sumbangan mereka.'], a:1,
+        why:'Kita menghargai pemimpin dengan mengenali jasa mereka, menghormati sejarah negara dan menggunakan fakta yang tepat. Nilai: bertanggungjawab dan hormat-menghormati.', kind:'ap', src:'Aplikasi nilai berdasarkan Buku Teks Unit 7 (SP K12.3.6); PDF 01 dan PDF 03 (Aktiviti 5)' }
+    ]}
+];
+var RANKS = [
+  { min:0,  max:11, lv:1, name:'EJEN PELATIH',       head:'Usaha yang baik, Ejen!', msg:'Teruskan latihan. Ulang kaji Bilik Pembelajaran dan cuba lagi untuk meningkatkan pencapaian kamu.' },
+  { min:12, max:20, lv:2, name:'EJEN BERPENGALAMAN', head:'Tahniah, Ejen Berpengalaman!', msg:'Kamu telah menguasai asas sejarah kepimpinan negara. Teruskan usaha untuk menjadi Ejen Pakar.' },
+  { min:21, max:26, lv:3, name:'EJEN PAKAR',         head:'Syabas, Ejen Pakar!', msg:'Penguasaan kamu tentang Perdana Menteri Malaysia sangat baik. Jasa pemimpin negara wajar terus dikenang dan dihargai.' },
+  { min:27, max:30, lv:4, name:'EJEN LEGENDA',       head:'Luar biasa, Ejen Legenda!', msg:'Kamu telah membuktikan penguasaan cemerlang tentang sejarah kepimpinan negara. Terima kasih kerana menghargai jasa pemimpin Malaysia!' }
+];
+
+(function(){
+  'use strict';
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var $ = function(id){ return document.getElementById(id); };
+  function esc(s){ return String(s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+  function shuffle(a){ a = a.slice(); for(var i = a.length - 1; i > 0; i--){ var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+  function hhmm(d){ return (d.getHours() < 10 ? '0' : '') + d.getHours() + ':' + (d.getMinutes() < 10 ? '0' : '') + d.getMinutes(); }
+
+  /* ---------- Pautan Kembali ke Pusat Misi (sama seperti Modul 02–04) ---------- */
+  function markReturnToMissionControl(){
+    try { localStorage.setItem('aha_return_mc', String(Date.now())); } catch(e){}
+  }
+  function showHqFallback(){
+    var box = document.getElementById('hqFallback');
+    if(!box) return;
+    box.hidden = false;
+    var b = document.getElementById('hqNewTab'); if(b) b.focus();
+  }
+  document.addEventListener('click', function(e){
+    var t = e.target.closest('#hqNewTab, #hqClose');
+    if(!t) return;
+    if(t.id === 'hqNewTab'){ t.setAttribute('href', MODULE01_URL); markReturnToMissionControl(); }
+    document.getElementById('hqFallback').hidden = true;
+  }, true);
+  document.querySelectorAll('[data-hq]').forEach(function(a){
+    a.setAttribute('href', MODULE01_URL);
+    a.setAttribute('target', '_top');
+    a.addEventListener('click', function(){
+      markReturnToMissionControl();
+      var left = false;
+      window.addEventListener('pagehide', function(){ left = true; }, {once:true});
+      setTimeout(function(){ if(!left && document.visibilityState === 'visible') showHqFallback(); }, 2500);
+    });
+  });
+
+  /* ---------- Keadaan permainan ---------- */
+  var AGENT = { name:'', cls:'' };
+  var G;          // keadaan satu permainan (Cuba Lagi = permainan baharu)
+  var R;          // cubaan tahap yang sedang berjalan
+  var LOG = [];   // rekod keputusan sesi (semua permainan dalam sesi ini)
+  try { var sl = sessionStorage.getItem('aha_m05_log'); if(sl) LOG = JSON.parse(sl) || []; } catch(e){}
+  function freshGame(){ return { best:[null,null,null], passed:[false,false,false], tries:[0,0,0], finalShown:false, started:new Date() }; }
+  function saveLog(){ try { sessionStorage.setItem('aha_m05_log', JSON.stringify(LOG.slice(-40))); } catch(e){} }
+  function total(){ return G.best.reduce(function(s, b){ return s + (b ? b.score : 0); }, 0); }
+  function unlocked(i){ return i === 0 || G.passed[i - 1]; }
+
+  /* ---------- Navigasi skrin ---------- */
+  var current = 'intro', busy = false;
+  function show(id){
+    if(busy || id === current || !$(id)) return;
+    busy = true;
+    var c = $('curtain'); if(!reduceMotion) c.classList.add('show');
+    setTimeout(function(){
+      $(current).classList.remove('active'); $(id).classList.add('active');
+      current = id; window.scrollTo(0, 0); c.classList.remove('show');
+      var h = $(id).querySelector('h1,h2'); if(h){ h.setAttribute('tabindex','-1'); h.focus({preventScroll:true}); }
+      setTimeout(function(){ busy = false; }, reduceMotion ? 30 : 420);
+    }, reduceMotion ? 0 : 240);
+  }
+  document.addEventListener('click', function(e){
+    var b = e.target.closest('[data-go]'); if(b && !b.disabled) show(b.getAttribute('data-go'));
+  });
+
+  /* ---------- Mula misi: animasi pembukaan ---------- */
+  $('btnStart').addEventListener('click', function(){
+    var bt = $('boot'), f = $('bootFill');
+    if(reduceMotion){ show('reg'); return; }
+    bt.classList.add('show'); f.style.width = '0';
+    requestAnimationFrame(function(){ requestAnimationFrame(function(){ f.style.width = '100%'; }); });
+    setTimeout(function(){ show('reg'); setTimeout(function(){ bt.classList.remove('show'); f.style.width = '0'; }, 200); }, 1250);
+  });
+
+  /* ---------- Pendaftaran ---------- */
+  var CLASSES = ['6 Al Farabi','6 Al Ghazali','6 Al Syafie'];
+  function cleanName(){ return $('inName').value.replace(/\s+/g, ' ').trim(); }
+  function regValid(){ return cleanName().length > 0 && CLASSES.indexOf($('inClass').value) !== -1; }
+  function updReg(){
+    $('btnReg').disabled = !regValid();
+    if(cleanName()) $('fName').classList.remove('bad');
+    if($('inClass').value) $('fClass').classList.remove('bad');
+  }
+  $('inName').addEventListener('input', updReg);
+  $('inClass').addEventListener('change', updReg);
+  $('regForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    var okN = cleanName().length > 0, okC = CLASSES.indexOf($('inClass').value) !== -1;
+    $('fName').classList.toggle('bad', !okN); $('fClass').classList.toggle('bad', !okC);
+    if(!okN){ $('inName').focus(); return; }
+    if(!okC){ $('inClass').focus(); return; }
+    AGENT.name = cleanName(); AGENT.cls = $('inClass').value;
+    $('cName').textContent = AGENT.name; $('cClass').textContent = AGENT.cls;
+    show('confirm');
+  });
+  $('btnConfirm').addEventListener('click', function(){
+    if(!AGENT.name || CLASSES.indexOf(AGENT.cls) === -1){ show('reg'); return; }
+    document.querySelectorAll('[data-name]').forEach(function(el){ el.textContent = AGENT.name; });
+    document.querySelectorAll('[data-class]').forEach(function(el){ el.textContent = AGENT.cls; });
+    G = freshGame(); renderMap(); show('map');
+  });
+
+  /* ---------- Peta tahap ---------- */
+  var LOCK = '<svg class="lock-ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
+  function renderMap(){
+    $('lvGrid').innerHTML = LEVELS.map(function(L, i){
+      var open = unlocked(i), pass = G.passed[i], b = G.best[i];
+      var st = pass ? '<span class="state pass">LULUS</span>' : open ? '<span class="state open">TERBUKA</span>' : '<span class="state lock">' + LOCK + 'DIKUNCI</span>';
+      var btn = !open ? '<button class="btn" type="button" disabled>Dikunci</button>'
+              : '<button class="btn ' + (pass ? '' : 'btn-gold') + '" type="button" data-play="' + i + '">' + (b ? 'Ulang ' + L.code : 'Mula ' + L.code) + '</button>';
+      return '<article class="lv-card' + (open ? '' : ' locked') + (pass ? ' passed' : '') + '">' + st +
+        '<span class="eyebrow">' + L.code + ' · ' + L.aras + '</span><h3>' + L.name + '</h3><p>' + L.desc + '</p>' +
+        '<ul><li>5 soalan · ' + L.per + ' markah setiap soalan</li><li>Jumlah ' + L.max + ' markah · lulus ' + L.pass + '/' + L.max + ' (60%)</li></ul>' +
+        '<p class="best">Markah terbaik: <b>' + (b ? b.score : '–') + '</b> / ' + L.max + (G.tries[i] ? ' · ' + G.tries[i] + ' cubaan' : '') + '</p>' +
+        (!open ? '<p>Lulus ' + LEVELS[i - 1].code + ' untuk membuka tahap ini.</p>' : '') + btn + '</article>';
+    }).join('');
+    $('mapTotal').textContent = total();
+    $('mapFinal').hidden = !G.passed[2];
+  }
+  $('lvGrid').addEventListener('click', function(e){
+    var b = e.target.closest('[data-play]'); if(!b || b.disabled) return;
+    startLevel(+b.getAttribute('data-play'));
+  });
+  $('btnShowFinal').addEventListener('click', function(){ renderFinal(); show('final'); });
+
+  /* ---------- Soalan ---------- */
+  function startLevel(i){
+    if(!unlocked(i)) return;                         // tiada langkau tahap
+    var L = LEVELS[i];
+    R = { lv:i, qi:0, score:0, right:0, wrong:0, marks:[], picked:null, checked:false,
+          order:L.Q.map(function(q){ return q.t === 'mcq' ? shuffle(q.opts.map(function(_, k){ return k; })) : shuffle(q.pool); }) };
+    $('qLevelTag').innerHTML = '<b>' + L.code + '</b> · ' + L.name.split(':')[0];
+    renderQ(); show('quiz');
+  }
+  function renderQ(){
+    var L = LEVELS[R.lv], q = L.Q[R.qi], ord = R.order[R.qi];
+    var prog = L.Q.map(function(_, k){ return '<span class="' + (k < R.qi ? (R.marks[k] ? 'ok' : 'no') : k === R.qi ? 'on' : '') + '"></span>'; }).join('');
+    var body = '';
+    if(q.t === 'mcq'){
+      body = '<p class="q-ask">Pilih jawapan yang betul.</p><div class="opts" role="group" aria-label="Pilihan jawapan">' + ord.map(function(k, n){
+        return '<button class="opt" type="button" data-k="' + k + '"><span class="k">' + 'ABCD'[n] + '</span><span class="t">' + esc(q.opts[k]) + '</span></button>';
+      }).join('') + '</div>';
+    } else {
+      body = '<p class="q-ask">Pilih Perdana Menteri bagi setiap item. Semua padanan mesti betul untuk mendapat ' + L.per + ' markah.</p>' + q.pairs.map(function(p, n){
+        return '<div class="mrow" data-row="' + n + '"><span class="lhs">' + esc(p[0]) + '</span><select data-m="' + n + '" aria-label="Padanan untuk ' + esc(p[0]) + '"><option value="">– Pilih –</option>' +
+          ord.map(function(o){ return '<option value="' + esc(o) + '">' + esc(o) + '</option>'; }).join('') + '</select><span class="fix">Jawapan betul: ' + esc(p[1]) + '</span></div>';
+      }).join('');
+    }
+    var data = q.data ? '<div class="data">' + q.data.map(function(d){ return '<div><span>' + esc(d[0]) + '</span><b>' + esc(d[1]) + '</b></div>'; }).join('') + '</div>' : '';
+    $('quizBox').innerHTML =
+      '<div class="q-top"><span>' + L.code + ' · Soalan <b>' + (R.qi + 1) + '</b> / ' + L.Q.length + '</span><span>Markah: <b id="qScore">' + R.score + '</b> / ' + L.max + '</span></div>' +
+      '<div class="qprog" role="progressbar" aria-valuemin="0" aria-valuemax="' + L.Q.length + '" aria-valuenow="' + R.qi + '" aria-label="Kemajuan soalan">' + prog + '</div>' +
+      '<span class="qtype">' + (q.t === 'mcq' ? 'PILIHAN JAWAPAN' : 'PADANAN') + ' · ' + L.per + ' MARKAH</span>' +
+      '<div class="fact-card"><span class="eyebrow">Soalan ' + (R.qi + 1) + '</span><p>' + esc(q.q) + '</p>' + data + '</div>' + body +
+      '<div class="feedback" id="fb"></div>' +
+      '<div class="q-actions"><button class="btn btn-gold" type="button" id="qCheck" disabled>Semak Jawapan</button>' +
+      '<button class="btn btn-gold" type="button" id="qNext" hidden>' + (R.qi === L.Q.length - 1 ? 'Lihat Keputusan Tahap' : 'Soalan Seterusnya ›') + '</button></div>';
+    R.picked = null; R.checked = false;
+  }
+  $('quizBox').addEventListener('click', function(e){
+    var o = e.target.closest('.opt');
+    if(o && !R.checked){
+      $('quizBox').querySelectorAll('.opt').forEach(function(x){ x.classList.toggle('sel', x === o); x.setAttribute('aria-pressed', x === o ? 'true' : 'false'); });
+      R.picked = +o.getAttribute('data-k'); $('qCheck').disabled = false; return;
+    }
+    if(e.target.closest('#qCheck')) check();
+    else if(e.target.closest('#qNext')) next();
+  });
+  $('quizBox').addEventListener('change', function(e){
+    if(!e.target.matches('select[data-m]') || R.checked) return;
+    var all = Array.prototype.every.call($('quizBox').querySelectorAll('select[data-m]'), function(s){ return s.value; });
+    $('qCheck').disabled = !all;
+  });
+  function check(){
+    if(R.checked) return;
+    var L = LEVELS[R.lv], q = L.Q[R.qi], ok;
+    if(q.t === 'mcq'){
+      if(R.picked === null) return;
+      ok = R.picked === q.a;
+      $('quizBox').querySelectorAll('.opt').forEach(function(x){
+        var k = +x.getAttribute('data-k'); x.disabled = true;
+        if(k === q.a) x.classList.add('correct'); else if(k === R.picked) x.classList.add('wrong');
+      });
+    } else {
+      var sels = $('quizBox').querySelectorAll('select[data-m]'); ok = true;
+      Array.prototype.forEach.call(sels, function(s){
+        var n = +s.getAttribute('data-m'), good = s.value === q.pairs[n][1];
+        if(!s.value) ok = false;
+        if(!good) ok = false;
+        s.disabled = true; s.closest('.mrow').classList.add(good ? 'correct' : 'wrong');
+      });
+    }
+    R.checked = true;
+    R.marks[R.qi] = ok;
+    if(ok){ R.score += L.per; R.right++; } else R.wrong++;
+    $('qScore').textContent = R.score;
+    var fb = $('fb');
+    fb.className = 'feedback show ' + (ok ? 'ok' : 'no');
+    fb.innerHTML = '<b>' + (ok ? 'Tepat sekali! +' + L.per + ' markah' : 'Kurang tepat. 0 markah') + '</b>' + esc(q.why) +
+      '<div class="srcline"><span class="tag ' + q.kind + '">' + (q.kind === 'tb' ? 'FAKTA BUKU TEKS' : 'APLIKASI / INTERPRETASI') + '</span><span>Sumber: ' + esc(q.src) + '</span></div>';
+    $('qCheck').hidden = true; $('qNext').hidden = false; $('qNext').focus({preventScroll:true});
+    sfx(ok ? 'correct' : 'wrong');
+  }
+  function next(){
+    var L = LEVELS[R.lv];
+    if(R.qi < L.Q.length - 1){ R.qi++; renderQ(); window.scrollTo(0, 0); return; }
+    finishLevel();
+  }
+
+  /* ---------- Tamat tahap: markah terbaik, syarat lulus 60% ---------- */
+  function finishLevel(){
+    var i = R.lv, L = LEVELS[i], pass = R.score >= L.pass;
+    G.tries[i]++;
+    var b = G.best[i];
+    if(!b || R.score > b.score) G.best[i] = { score:R.score, right:R.right, wrong:R.wrong };  // simpan markah terbaik sahaja
+    if(pass) G.passed[i] = true;
+    LOG.push({ n:AGENT.name, c:AGENT.cls, lv:L.code, s:R.score, m:L.max, p:pass, t:hhmm(new Date()) }); saveLog();
+    var box = $('lresBox');
+    box.className = 'panel hud lres ' + (pass ? 'pass' : 'fail');
+    var btns;
+    if(pass && i < 2) btns = '<button class="btn btn-gold" type="button" data-play="' + (i + 1) + '">Teruskan ke ' + LEVELS[i + 1].code + ' ›</button><button class="btn btn-ghost" type="button" data-play="' + i + '">Ulang ' + L.code + '</button>';
+    else if(pass) btns = '<button class="btn btn-gold" type="button" id="toFinal">Lihat Keputusan Akhir</button><button class="btn btn-ghost" type="button" data-play="' + i + '">Ulang ' + L.code + '</button>';
+    else if(G.passed[i]) btns = '<button class="btn btn-gold" type="button" data-play="' + i + '">Ulang ' + L.code + '</button>' +   // pernah lulus: markah terbaik dikekalkan
+      (i < 2 ? '<button class="btn" type="button" data-play="' + (i + 1) + '">Teruskan ke ' + LEVELS[i + 1].code + ' ›</button>' : '<button class="btn" type="button" id="toFinal">Lihat Keputusan Akhir</button>');
+    else btns = '<button class="btn btn-gold" type="button" data-play="' + i + '">Ulang ' + L.code + '</button>';
+    btns += '<button class="btn btn-ghost" type="button" data-go="map">Peta Misi</button>';
+    box.innerHTML = '<span class="eyebrow">' + L.code + ' · ' + L.name + '</span>' +
+      '<p class="big">' + R.score + ' / ' + L.max + '</p>' +
+      '<p class="verdict">' + (pass ? 'LULUS' : 'BELUM LULUS') + '</p>' +
+      '<p class="msg">Betul: ' + R.right + ' · Salah: ' + R.wrong + ' · Markah lulus: ' + L.pass + ' / ' + L.max + ' (60%)</p>' +
+      '<p class="msg">' + (pass ? (i < 2 ? 'Hebat, Ejen! ' + LEVELS[i + 1].code + ' kini dibuka.' : 'Hebat, Ejen! Kamu telah menamatkan ketiga-tiga tahap.')
+                                : G.passed[i] ? 'Cubaan ini belum lulus, tetapi kamu pernah lulus tahap ini. Markah terbaik kamu dikekalkan.'
+                                : 'Kamu perlu mendapat sekurang-kurangnya ' + L.pass + ' markah. Baca penerangan jawapan, kemudian ulang tahap ini.') + '</p>' +
+      '<p class="bestline">Markah terbaik ' + L.code + ': <b>' + G.best[i].score + '</b> / ' + L.max + '</p>' +
+      '<div class="btn-row">' + btns + '</div>';
+    renderMap();
+    show('lresult');
+    setTimeout(function(){ sfx(pass ? 'pass' : 'fail'); }, reduceMotion ? 0 : 300);
+  }
+  $('lresBox').addEventListener('click', function(e){
+    var p = e.target.closest('[data-play]'); if(p){ startLevel(+p.getAttribute('data-play')); return; }
+    if(e.target.closest('#toFinal')){ renderFinal(); show('final'); }
+  });
+
+  /* ---------- Keputusan akhir ---------- */
+  function rankOf(t){ for(var k = 0; k < RANKS.length; k++) if(t >= RANKS[k].min && t <= RANKS[k].max) return RANKS[k]; return RANKS[0]; }
+  function renderFinal(){
+    if(!G.passed[2]) return;
+    var t = total(), pct = Math.round(t / 30 * 100), rk = rankOf(t), right = 0, wrong = 0;
+    G.best.forEach(function(b){ right += b.right; wrong += b.wrong; });
+    $('badge').className = 'badge lv' + rk.lv; $('badgeName').textContent = rk.name;
+    $('fName2').textContent = AGENT.name; $('fClass2').textContent = AGENT.cls;
+    $('fRows').innerHTML = LEVELS.map(function(L, i){
+      return '<tr><td>' + L.code + ' · ' + esc(L.name.split(':')[0]) + '</td><td>LULUS (' + G.tries[i] + ' cubaan)</td><td class="n">' + G.best[i].score + ' / ' + L.max + '</td></tr>';
+    }).join('') + '<tr class="tot"><td>JUMLAH</td><td></td><td class="n">' + t + ' / 30</td></tr>';
+    $('fTotal').textContent = t + '/30'; $('fPct').textContent = pct + '%';
+    $('fRight').textContent = right; $('fWrong').textContent = wrong;
+    document.querySelectorAll('#ranks [data-rk]').forEach(function(d){ d.classList.toggle('me', +d.getAttribute('data-rk') === rk.lv); });
+    $('fMsgHead').textContent = rk.head; $('fMsg').textContent = rk.msg;
+    $('logRows').innerHTML = LOG.map(function(r, k){
+      return '<tr><td>' + (k + 1) + '</td><td>' + esc(r.lv) + (r.n !== AGENT.name ? ' <small>(' + esc(r.n) + ')</small>' : '') + '</td><td>' + r.s + ' / ' + r.m + '</td><td class="' + (r.p ? 'ok' : 'no') + '">' + (r.p ? 'LULUS' : 'GAGAL') + '</td><td>' + esc(r.t) + '</td></tr>';
+    }).join('');
+    var d = new Date();
+    $('fStamp').textContent = 'Dijana: ' + d.getDate() + '/' + (d.getMonth() + 1) + '/' + d.getFullYear() + ', ' + hhmm(d) + ' · Markah akhir dikira daripada markah terbaik setiap tahap (tiada markah berganda).';
+    if(!G.finalShown){ G.finalShown = true; setTimeout(function(){ sndFinal(rk.lv); }, reduceMotion ? 0 : 350); }
+  }
+  // Cuba Lagi: permainan baharu, semua markah bermula semula (tiada markah berganda)
+  $('btnRetry').addEventListener('click', function(){ G = freshGame(); renderMap(); show('map'); });
+
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'Escape' && !$('hqFallback').hidden){ $('hqFallback').hidden = true; }
+  });
+
+  /* ---------- Zarah latar belakang ---------- */
+  var cv = $('particles'), ctx = cv.getContext('2d'), parts = [], W = 0, H = 0, DPR = Math.min(window.devicePixelRatio || 1, 2);
+  function resize(){
+    W = innerWidth; H = innerHeight; cv.width = W * DPR; cv.height = H * DPR; cv.style.width = W + 'px'; cv.style.height = H + 'px';
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+    var c = Math.min(70, Math.round(W * H / 22000)); parts = [];
+    for(var i = 0; i < c; i++) parts.push({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.6+.4,vy:-(Math.random()*.25+.05),vx:(Math.random()-.5)*.12,a:Math.random()*.6+.2,g:Math.random()<.25});
+    if(reduceMotion) draw(false);
+  }
+  function draw(m){
+    ctx.clearRect(0,0,W,H);
+    parts.forEach(function(p){
+      if(m){ p.x += p.vx; p.y += p.vy; if(p.y < -5){ p.y = H + 5; p.x = Math.random()*W; } }
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fillStyle = p.g ? 'rgba(214,173,85,' + p.a + ')' : 'rgba(83,216,232,' + p.a + ')'; ctx.fill();
+    });
+  }
+  function loop(){ if(!document.hidden) draw(true); requestAnimationFrame(loop); }
+  addEventListener('resize', resize); resize();
+  if(!reduceMotion) requestAnimationFrame(loop);
+
+  /* =========================================================
+     SISTEM BUNYI (Web Audio API – tiada fail luaran)
+     Gaya sama seperti Modul 01–04. Bermula OFF; murid menekan SOUND ON.
+     ========================================================= */
+  var SOUND = {
+    levels: { music:0.38, click:0.60, open:0.72, select:0.55, correct:0.70, wrong:0.60, pass:0.70, fail:0.60, complete:0.75, badge:0.75 }, // pada volume 100%
+    defaultVolume: 100
+  };
+  var NORM = { music:3.5, click:13.5, open:4.07, select:10.6, correct:5.85, wrong:6.5, pass:7.6, fail:6.5, complete:6.9, badge:3.6 };
+  var ACtx = window.AudioContext || window.webkitAudioContext;
+  var SND = { on:false, vol:SOUND.defaultVolume / 100, ctx:null, master:null, gate:null, mus:null, sfxBus:null, delay:null, noise:null,
+            timer:null, next:0, step:0, playing:false, voice:null, leaving:false };
+  try { var sv = localStorage.getItem('aha_m05_vol'); if(sv !== null && !isNaN(+sv)) SND.vol = Math.max(0, Math.min(1, +sv / 100)); } catch(e){}
+  var ICON_ON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5L6 9H2v6h4l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/></svg>';
+  var ICON_OFF = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5L6 9H2v6h4l5 4z"/><path d="M22 9l-6 6M16 9l6 6"/></svg>';
+
+  function ensureCtx(){
+    if(SND.ctx || !ACtx) return SND.ctx;
+    var c = SND.ctx = new ACtx();
+    var lim = c.createDynamicsCompressor();   // pengehad: elak bunyi pecah
+    lim.threshold.value = -1.5; lim.knee.value = 0; lim.ratio.value = 20; lim.attack.value = 0.002; lim.release.value = 0.15;
+    lim.connect(c.destination);
+    SND.master = c.createGain(); SND.master.gain.value = 0; SND.master.connect(lim);
+    SND.gate = c.createGain(); SND.gate.gain.value = 0; SND.gate.connect(SND.master);
+    SND.mus = c.createGain(); SND.mus.gain.value = SOUND.levels.music * NORM.music; SND.mus.connect(SND.gate);
+    SND.sfxBus = c.createGain(); SND.sfxBus.gain.value = 1; SND.sfxBus.connect(SND.master);
+    SND.delay = c.createDelay(1); SND.delay.delayTime.value = 0.42;
+    var fb = c.createGain(); fb.gain.value = 0.32; var dlp = c.createBiquadFilter(); dlp.type = 'lowpass'; dlp.frequency.value = 2200;
+    SND.delay.connect(dlp); dlp.connect(fb); fb.connect(SND.delay); dlp.connect(SND.mus);
+    var len = c.sampleRate * 1.5, nb = c.createBuffer(1, len, c.sampleRate), d = nb.getChannelData(0);
+    for(var i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+    SND.noise = nb;
+    return c;
+  }
+  function updateMusic(){
+    var c = SND.ctx; if(!c) return;
+    var want = SND.on && !SND.leaving && document.visibilityState === 'visible';
+    if(want === SND.playing) return;
+    var t = c.currentTime;
+    SND.gate.gain.cancelScheduledValues(t); SND.gate.gain.setValueAtTime(SND.gate.gain.value, t);
+    SND.playing = want;
+    if(want){
+      SND.gate.gain.linearRampToValueAtTime(1, t + 1.5);
+      if(!SND.timer){ SND.next = t + 0.1; SND.step = 0; SND.timer = setInterval(schedule, 120); }
+    } else {
+      SND.gate.gain.linearRampToValueAtTime(0, t + 0.3);
+      if(SND.timer){ clearInterval(SND.timer); SND.timer = null; }
+    }
+  }
+
+  /* ---- Muzik latar: inspirasi, sinematik dan lembut (F – C – Dm – Bb) ---- */
+  var BEAT = 0.44;
+  var CHORDS = [[41,53,57,60,65],[36,52,55,60,64],[38,50,53,57,62],[34,50,53,58,62]];
+  function hz(m){ return 440 * Math.pow(2, (m - 69) / 12); }
+  function schedule(){
+    var c = SND.ctx; if(!c || !SND.playing) return;
+    while(SND.next < c.currentTime + 0.7){
+      var t = SND.next, st = SND.step, ch = CHORDS[Math.floor(st / 16) % 4];
+      if(st % 16 === 0) mPad(ch, t, BEAT * 16);
+      if(st % 4 === 0) mBass(ch[0] - 12, t, BEAT * 3);
+      if(st % 4 === 2 || st % 16 === 13) mSparkle(ch[1 + (st * 7) % 4] + 24, t);
+      SND.next += BEAT; SND.step++;
+    }
+  }
+  function mPad(ch, t, dur){
+    var c = SND.ctx, f = c.createBiquadFilter(); f.type = 'lowpass'; f.Q.value = 0.7;
+    f.frequency.setValueAtTime(800, t); f.frequency.linearRampToValueAtTime(1600, t + dur * 0.5); f.frequency.linearRampToValueAtTime(800, t + dur);
+    var g = c.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.045, t + 1.6);
+    g.gain.setValueAtTime(0.045, t + dur - 1.2); g.gain.linearRampToValueAtTime(0.0001, t + dur + 1.2);
+    f.connect(g); g.connect(SND.mus);
+    ch.slice(1).forEach(function(m){
+      [-6, 6].forEach(function(dt){
+        var o = c.createOscillator(); o.type = 'sawtooth'; o.frequency.value = hz(m); o.detune.value = dt;
+        o.connect(f); o.start(t); o.stop(t + dur + 1.3);
+      });
+    });
+  }
+  function mBass(m, t, len){
+    var c = SND.ctx, o = c.createOscillator(), g = c.createGain(), f = c.createBiquadFilter();
+    o.type = 'triangle'; o.frequency.value = hz(m); f.type = 'lowpass'; f.frequency.value = 420;
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.08, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + len * 1.6);
+    o.connect(f); f.connect(g); g.connect(SND.mus); o.start(t); o.stop(t + len * 1.7);
+  }
+  function mSparkle(m, t){
+    var c = SND.ctx, o = c.createOscillator(), g = c.createGain();
+    o.type = 'sine'; o.frequency.value = hz(m);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.035, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.9);
+    o.connect(g); g.connect(SND.mus); g.connect(SND.delay); o.start(t); o.stop(t + 1);
+  }
+
+  /* ---- Kesan bunyi (satu pada satu masa, tiada pertindihan) ---- */
+  function newVoice(gain){
+    var c = SND.ctx, t = c.currentTime;
+    if(SND.voice){ SND.voice.gain.cancelScheduledValues(t); SND.voice.gain.setTargetAtTime(0, t, 0.015); }
+    var v = SND.voice = c.createGain(); v.gain.value = gain; v.connect(SND.sfxBus); return v;
+  }
+  function tone(v, type, f1, f2, t, dur, peak){
+    var c = SND.ctx, o = c.createOscillator(), g = c.createGain();
+    o.type = type; o.frequency.setValueAtTime(f1, t); if(f2 !== f1) o.frequency.exponentialRampToValueAtTime(f2, t + dur);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + 0.012); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(v); o.start(t); o.stop(t + dur + 0.05);
+  }
+  function whoosh(v, t, dur, f1, f2, peak){
+    var c = SND.ctx, n = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain();
+    n.buffer = SND.noise; f.type = 'bandpass'; f.Q.value = 2.5;
+    f.frequency.setValueAtTime(f1, t); f.frequency.exponentialRampToValueAtTime(f2, t + dur);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + dur * 0.6); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    n.connect(f); f.connect(g); g.connect(v); n.start(t); n.stop(t + dur + 0.05);
+  }
+  var SYNTH = {
+    click: function(v, t){ tone(v, 'sine', 1400, 900, t, 0.07, 0.07); },
+    // Mula misi: dentuman sinematik, desiran naik dan arpeggio
+    open: function(v, t){
+      tone(v, 'sine', 110, 50, t, 0.9, 0.22);
+      whoosh(v, t, 0.8, 250, 3800, 0.08);
+      [53,57,60,65,69].forEach(function(m, i){ tone(v, 'triangle', hz(m), hz(m), t + 0.2 + i * 0.08, 0.5, 0.08); });
+    },
+    select: function(v, t){ tone(v, 'triangle', hz(74), hz(79), t, 0.1, 0.09); },
+    correct: function(v, t){ tone(v, 'triangle', hz(76), hz(76), t, 0.18, 0.13); tone(v, 'triangle', hz(83), hz(83), t + 0.1, 0.4, 0.13); tone(v, 'sine', hz(95), hz(95), t + 0.1, 0.5, 0.04); },
+    wrong: function(v, t){ tone(v, 'triangle', 300, 200, t, 0.22, 0.14); tone(v, 'triangle', 220, 140, t + 0.16, 0.32, 0.13); },
+    // Lulus tahap: kilauan menaik
+    pass: function(v, t){
+      whoosh(v, t, 0.5, 400, 5000, 0.06);
+      [65,69,72,77,81].forEach(function(m, i){ tone(v, 'sine', hz(m), hz(m), t + 0.05 + i * 0.07, 0.6, 0.06); });
+      [53,60,65].forEach(function(m){ tone(v, 'triangle', hz(m), hz(m), t + 0.1, 1.0, 0.05); });
+    },
+    // Belum lulus: dua nada menurun lembut
+    fail: function(v, t){ tone(v, 'triangle', 300, 200, t, 0.22, 0.14); tone(v, 'triangle', 220, 140, t + 0.16, 0.32, 0.13); }
+  };
+  function finComplete(v, t){ [65,69,72,77].forEach(function(m, i){ tone(v, 'triangle', hz(m), hz(m), t + i * 0.11, 0.55, 0.11); }); tone(v, 'sine', hz(89), hz(89), t + 0.44, 0.9, 0.04); }
+  // Lencana: lebih megah bagi pangkat lebih tinggi
+  function finBadge(v, t, lv){
+    var top = lv >= 3 ? [65,69,72,77,81] : lv === 2 ? [65,69,72,77] : [65,69,72];
+    top.forEach(function(m, i){ tone(v, 'triangle', hz(m), hz(m), t + i * 0.09, 0.45, 0.1); });
+    var tc = t + top.length * 0.09 + 0.05;
+    [53,57,60,65].forEach(function(m){ tone(v, 'sawtooth', hz(m), hz(m), tc, 1.6, 0.025); tone(v, 'triangle', hz(m), hz(m), tc, 1.6, 0.06); });
+    if(lv >= 2) [84,89,93].forEach(function(m, i){ tone(v, 'sine', hz(m), hz(m), tc + 0.1 + i * 0.12, 0.7, 0.03); });
+    if(lv === 4) [96,101].forEach(function(m, i){ tone(v, 'sine', hz(m), hz(m), tc + 0.5 + i * 0.12, 0.6, 0.02); });
+  }
+  function subG(v, name){ var g = SND.ctx.createGain(); g.gain.value = SOUND.levels[name] * NORM[name]; g.connect(v); return g; }
+  function sndFinal(lv){
+    if(!SND.on || !SND.ctx || SND.ctx.state !== 'running') return;
+    var v = newVoice(1), t = SND.ctx.currentTime + 0.05;
+    finComplete(subG(v, 'complete'), t);
+    finBadge(subG(v, 'badge'), t + 0.75, lv);
+  }
+  function sfx(name){
+    if(!SND.on || !SND.ctx || SND.ctx.state !== 'running') return;
+    var v = newVoice(SOUND.levels[name] * NORM[name]);
+    SYNTH[name](v, SND.ctx.currentTime + 0.01);
+  }
+
+  /* ---- Kawalan ---- */
+  function applyVol(){
+    $('sndVol').value = Math.round(SND.vol * 100); $('sndVolTxt').textContent = Math.round(SND.vol * 100) + '%';
+    if(SND.ctx){ var t = SND.ctx.currentTime; SND.master.gain.cancelScheduledValues(t); SND.master.gain.setTargetAtTime(SND.on ? SND.vol : 0, t, 0.05); }
+  }
+  function renderSnd(){
+    var b = $('sndBtn');
+    b.innerHTML = SND.on ? ICON_ON : ICON_OFF; b.classList.toggle('on', SND.on);
+    b.setAttribute('aria-label', 'Tetapan bunyi (' + (SND.on ? 'bunyi dihidupkan' : 'bunyi dimatikan') + ')');
+    $('sndOn').setAttribute('aria-pressed', SND.on ? 'true' : 'false');
+    $('sndOff').setAttribute('aria-pressed', SND.on ? 'false' : 'true');
+  }
+  function setSound(on){
+    if(on && !ACtx){ $('sndNote').textContent = 'Pelayar ini tidak menyokong bunyi.'; return; }
+    if(on === SND.on){ renderSnd(); return; }
+    SND.on = on;
+    if(on){
+      var c = ensureCtx(); SND.leaving = false;
+      var go = function(){ applyVol(); updateMusic(); sfx('click'); };
+      if(c.state !== 'running'){ var pr = c.resume(); if(pr && pr.then) pr.then(go, go); else go(); } else go();
+      try { var sb = c.createBufferSource(); sb.buffer = c.createBuffer(1, 1, 22050); sb.connect(c.destination); sb.start(0); } catch(e){}  // buka kunci audio iOS
+    } else if(SND.ctx){
+      var t = SND.ctx.currentTime; SND.master.gain.cancelScheduledValues(t); SND.master.gain.setValueAtTime(0, t);
+      updateMusic();
+      setTimeout(function(){ if(!SND.on && SND.ctx.state === 'running') SND.ctx.suspend(); }, 500);
+    }
+    renderSnd();
+  }
+  $('sndBtn').addEventListener('click', function(){
+    var pnl = $('sndPanel'), open = pnl.hidden; pnl.hidden = !open; this.setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
+  $('sndOn').addEventListener('click', function(){ setSound(true); });
+  $('sndOff').addEventListener('click', function(){ setSound(false); });
+  $('sndVol').addEventListener('input', function(){
+    SND.vol = +this.value / 100; applyVol();
+    try { localStorage.setItem('aha_m05_vol', String(Math.round(SND.vol * 100))); } catch(e){}
+  });
+  document.addEventListener('click', function(e){
+    var pnl = $('sndPanel'); if(pnl.hidden || e.target.closest('#snd')) return;
+    pnl.hidden = true; $('sndBtn').setAttribute('aria-expanded','false');
+  });
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'Escape' && !$('sndPanel').hidden){ $('sndPanel').hidden = true; $('sndBtn').setAttribute('aria-expanded','false'); $('sndBtn').focus(); }
+  });
+  // Pilih bunyi mengikut butang yang ditekan
+  document.addEventListener('click', function(e){
+    var b = e.target.closest('button, a'); if(!b || b.disabled || b.closest('#snd')) return;
+    if(b.id === 'hqClose'){ if(SND.on){ SND.leaving = false; updateMusic(); } sfx('click'); return; }
+    if(b.hasAttribute('data-hq') || b.id === 'hqNewTab'){ sfx('click'); SND.leaving = true; updateMusic(); return; }  // meninggalkan modul: hentikan muzik
+    if(b.id === 'btnStart') sfx('open');
+    else if(b.classList.contains('opt')){ if(!R || !R.checked) sfx('select'); }
+    else if(b.id === 'qCheck') return;                 // bunyi betul/salah dimainkan oleh semakan
+    else if(b.id === 'qNext' && R && R.qi === LEVELS[R.lv].Q.length - 1) return;  // bunyi lulus/gagal dimainkan di skrin keputusan tahap
+    else if(b.id === 'toFinal' || b.id === 'btnShowFinal') return;                   // bunyi lencana dimainkan di keputusan akhir
+    else sfx('click');
+  }, true);
+  document.addEventListener('change', function(e){ if(e.target.matches('select')) sfx('select'); });
+  document.addEventListener('visibilitychange', function(){
+    if(!SND.ctx) return;
+    if(document.visibilityState === 'hidden') updateMusic();
+    else if(SND.on){ SND.leaving = false; var pr = SND.ctx.resume(); if(pr && pr.then) pr.then(updateMusic); else updateMusic(); }
+  });
+  window.addEventListener('pagehide', function(){ if(SND.ctx){ SND.leaving = true; updateMusic(); } });
+  renderSnd(); applyVol();
+})();
+</script>
+<!-- ================= SANDARAN: KEMBALI KE PUSAT MISI ================= -->
+<style>
+.hq-fallback{position:fixed;left:16px;right:16px;bottom:16px;z-index:90;max-width:520px;margin:0 auto;padding:18px 18px 16px;border-radius:16px;background:rgba(16,35,61,.97);border:1.5px solid var(--gold);box-shadow:0 20px 60px rgba(0,0,0,.5),0 0 30px rgba(214,173,85,.25);text-align:center;animation:fadeUp .4s var(--ease) both}
+.hq-fallback[hidden]{display:none}
+.hq-fallback p{font-size:.95rem;margin-bottom:12px}
+.hq-fallback p b{color:var(--gold)}
+.hq-fallback .btn-row{margin-top:0}
+</style>
+<div class="hq-fallback" id="hqFallback" role="dialog" aria-live="polite" aria-label="Buka Pusat Misi" hidden>
+  <p><b>Pusat Misi tidak dapat dibuka di sini.</b><br>Tekan butang di bawah untuk membukanya dalam tab baharu.</p>
+  <div class="btn-row">
+    <a class="btn btn-gold" id="hqNewTab" href="https://sites.google.com/moe-dl.edu.my/ejen-akademi-sejarah/" target="_blank" rel="noopener">Buka Pusat Misi (Tab Baharu)</a>
+    <button class="btn btn-ghost" id="hqClose" type="button">Tutup</button>
+  </div>
+</div>
+</body>
+</html>
