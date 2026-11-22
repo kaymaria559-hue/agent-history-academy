@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agent Feedback Centre – Agent History Academy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800&family=Nunito+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#071426;--panel:#10233d;--gold:#d6ad55;--gold2:#f0d28e;--cyan:#53d8e8;--white:#f5f7fa;--muted:#a9b7c9;--line:rgba(83,216,232,.25);--body:'Nunito Sans','Segoe UI',sans-serif;--display:'Orbitron','Segoe UI',sans-serif}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse 80% 45% at 50% -5%,rgba(83,216,232,.15),transparent 65%),linear-gradient(180deg,#071426,#0a1a30 60%,#071426);color:var(--white);font:16px/1.6 var(--body)}
+body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.2;background-image:linear-gradient(rgba(83,216,232,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(83,216,232,.07) 1px,transparent 1px);background-size:44px 44px}
+main{position:relative;max-width:1120px;margin:auto;padding:30px 18px 55px}header{text-align:center;padding:28px 15px}
+.eyebrow{font:700 .72rem var(--display);letter-spacing:.24em;color:var(--cyan)}h1,h2,h3{font-family:var(--display);line-height:1.25}h1{font-size:clamp(1.6rem,5vw,3rem);color:var(--gold);letter-spacing:.06em;margin:12px 0}header p,.sub{color:var(--muted)}header p{max-width:650px;margin:auto}.sub{font-size:.92rem;margin:0 0 18px}
+.grid{display:grid;grid-template-columns:1.05fr .95fr;gap:20px;align-items:start}.panel{background:rgba(16,35,61,.9);border:1px solid var(--line);border-radius:18px;padding:23px;box-shadow:0 18px 50px rgba(0,0,0,.25)}
+.panel h2{font-size:1.02rem;color:var(--gold);letter-spacing:.08em;margin:0 0 8px}label{display:block;font-weight:800;margin:14px 0 6px}
+select,textarea{width:100%;border:1px solid rgba(83,216,232,.35);border-radius:11px;background:#091a30;color:var(--white);padding:12px 13px;font:inherit}textarea{min-height:78px;resize:vertical}
+.rating{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}.rating label{margin:0;position:relative}.rating input{position:absolute;opacity:0}.rating span{display:grid;place-items:center;min-height:42px;border:1px solid var(--line);border-radius:10px;color:var(--muted);font-weight:800;cursor:pointer}.rating input:checked+span{background:rgba(214,173,85,.18);border-color:var(--gold);color:var(--gold2)}
+.scale{display:flex;justify-content:space-between;color:var(--muted);font-size:.7rem;margin-top:4px}
+button{border:1px solid var(--gold);border-radius:999px;padding:12px 20px;background:linear-gradient(135deg,var(--gold2),var(--gold));color:#1a1205;font:800 .74rem var(--display);letter-spacing:.07em;text-transform:uppercase;cursor:pointer;min-height:45px}button:disabled{opacity:.55;cursor:wait}.secondary{background:transparent;color:var(--cyan);border-color:var(--cyan)}.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:19px}
+.status{margin-top:13px;padding:11px 13px;border-radius:10px;background:rgba(83,216,232,.08);border:1px solid var(--line);color:var(--muted);font-size:.88rem}.status.ok{border-color:rgba(74,222,128,.5);color:#4ade80}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:18px 0}.stat{padding:14px;border-radius:13px;background:#091a30;border:1px solid rgba(83,216,232,.18)}.stat strong{display:block;font:800 1.7rem var(--display);color:var(--gold)}.stat small{color:var(--muted)}
+.chartrow{margin:13px 0}.charthead{display:flex;justify-content:space-between;gap:10px;font-size:.85rem}.charthead b{color:var(--gold2)}.track{height:9px;background:#071426;border-radius:99px;overflow:hidden;margin-top:6px}.fill{height:100%;background:linear-gradient(90deg,var(--cyan),var(--gold));border-radius:99px}
+.classlist{display:grid;gap:9px;margin-top:12px}.classitem{display:flex;justify-content:space-between;gap:10px;padding:10px 12px;background:#091a30;border:1px solid rgba(83,216,232,.16);border-radius:10px}.classitem strong{color:var(--gold2)}.note,footer{font-size:.78rem;color:var(--muted)}footer{text-align:center;padding:26px 10px}#frameSink{display:none}
+
+.sound-control{position:fixed;right:16px;top:16px;z-index:20;display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.sound-toggle{width:46px;height:46px;padding:0;border-radius:50%;background:rgba(16,35,61,.96);border:1px solid var(--cyan);color:var(--white);font-size:20px;box-shadow:0 8px 24px rgba(0,0,0,.35)}
+.sound-panel{width:min(270px,calc(100vw - 32px));padding:15px;border-radius:14px;background:rgba(16,35,61,.98);border:1px solid var(--gold);box-shadow:0 16px 40px rgba(0,0,0,.45)}
+.sound-panel[hidden]{display:none}.sound-panel strong{display:block;color:var(--gold);font:700 .7rem var(--display);letter-spacing:.1em;margin-bottom:10px}
+.sound-actions{display:flex;gap:8px}.sound-actions button{flex:1;min-height:36px;padding:7px 9px;font-size:.62rem}
+.sound-panel label{display:flex;justify-content:space-between;font:700 .65rem var(--display);color:var(--muted);margin:12px 0 4px}
+.sound-panel input{width:100%;accent-color:var(--gold);padding:0}.sound-panel small{display:block;color:var(--muted);font-size:.72rem;margin-top:8px}
+@media(max-width:800px){.sound-control{top:10px;right:10px}header{padding-top:65px}}
+@media(max-width:800px){.grid{grid-template-columns:1fr}main{padding:14px 12px 40px}.panel{padding:18px}}
+</style>
+</head>
+<body>
+<main>
+<header><div class="eyebrow">AGENT HISTORY ACADEMY · SUARA EJEN</div><h1>AGENT FEEDBACK CENTRE</h1><p>YOUR VOICE. OUR NEXT MISSION. Kongsikan pengalaman anda untuk membantu kami menambah baik pembelajaran Sejarah.</p></header>
+<div class="grid">
+<section class="panel">
+<h2>01 / MISSION FEEDBACK</h2><p class="sub">Pilih kelas dan berikan penilaian. Semua lima penilaian wajib diisi.</p>
+<form id="feedbackForm" action="https://script.google.com/macros/s/AKfycbz0mscMWoPBf1SN6wpeca8h2oxKfu1fXQnKRBtnAJj2gMgpp0RyIkHn3OdXhFvyp7IF/exec" method="POST" target="frameSink">
+<label for="studentClass">Kelas</label><select id="studentClass" name="studentClass" required><option value="">Pilih kelas</option><option>6 Al Farabi</option><option>6 Al Ghazali</option><option>6 Al Syafie</option></select>
+<div id="ratings"></div>
+<label for="liked">Apakah perkara yang paling anda sukai? (pilihan)</label><textarea id="liked" name="liked" maxlength="500" placeholder="Kongsikan pengalaman anda..."></textarea>
+<label for="suggestion">Cadangan penambahbaikan (pilihan)</label><textarea id="suggestion" name="suggestion" maxlength="500" placeholder="Apakah yang boleh kami tambah baik?"></textarea>
+<div class="actions"><button id="submitBtn" type="submit">Hantar Maklum Balas</button><button class="secondary" type="reset">Kosongkan</button></div>
+<div class="status" id="formStatus" role="status">Borang ini tidak meminta nama penuh. Sila berikan jawapan yang jujur dan sopan.</div>
+</form><iframe name="frameSink" id="frameSink" title="Penghantaran maklum balas"></iframe>
+</section>
+<section class="panel">
+<h2>02 / FEEDBACK ANALYTICS</h2><p class="sub">Statistik agregat berdasarkan respons yang diterima.</p>
+<div class="stats"><div class="stat"><strong id="total">—</strong><small>Jumlah respons</small></div><div class="stat"><strong id="overall">—</strong><small>Purata kepuasan / 5</small></div></div>
+<h3 style="font-size:.85rem;color:var(--cyan);letter-spacing:.1em">PURATA PENILAIAN</h3><div id="ratingCharts"><p class="note">Memuatkan statistik...</p></div>
+<h3 style="font-size:.85rem;color:var(--cyan);letter-spacing:.1em;margin-top:23px">ANALISIS MENGIKUT KELAS</h3><div id="classStats" class="classlist"><p class="note">Memuatkan analisis kelas...</p></div>
+<div class="actions"><button class="secondary" type="button" id="refreshBtn">Muat Semula Statistik</button></div>
+<p class="note">Paparan ini hanya menunjukkan statistik terkumpul. Respons dan cadangan individu kekal dalam rekod guru.</p>
+</section>
+</div>
+<div class="sound-control" id="soundControl">
+  <button class="sound-toggle" id="soundToggle" type="button" aria-label="Hidupkan bunyi" aria-pressed="false">🔇</button>
+  <div class="sound-panel" id="soundPanel" hidden>
+    <strong>AUDIO FEEDBACK CENTRE</strong>
+    <div class="sound-actions">
+      <button type="button" id="soundOn">Sound On</button>
+      <button type="button" class="secondary" id="soundOff">Sound Off</button>
+    </div>
+    <label for="soundVolume">VOLUME <span id="soundVolumeText">35%</span></label>
+    <input id="soundVolume" type="range" min="0" max="100" value="35">
+    <small>Bunyi bermula OFF. Muzik dan kesan bunyi dijana oleh pelayar.</small>
+  </div>
+</div>
+<footer>AGENT HISTORY ACADEMY · FEEDBACK CENTRE</footer>
+</main>
+<script>
+(function(){
+'use strict';
+const API='https://script.google.com/macros/s/AKfycbz0mscMWoPBf1SN6wpeca8h2oxKfu1fXQnKRBtnAJj2gMgpp0RyIkHn3OdXhFvyp7IF/exec';
+const questions=[['design','Reka bentuk','Reka bentuk laman web menarik.'],['history','Kandungan sejarah','Kandungan sejarah mudah difahami.'],['game','Permainan','Permainan membantu saya belajar Sejarah.'],['multimedia','Multimedia','Video, audio dan bahan multimedia menarik.'],['satisfaction','Kepuasan keseluruhan','Saya berpuas hati dengan pengalaman pembelajaran ini.']];
+const ratings=document.getElementById('ratings');
+questions.forEach((q,i)=>{const w=document.createElement('div');const l=document.createElement('label');l.textContent=(i+1)+'. '+q[2];w.appendChild(l);const g=document.createElement('div');g.className='rating';for(let n=1;n<=5;n++){const x=document.createElement('label'),inp=document.createElement('input'),s=document.createElement('span');inp.type='radio';inp.name=q[0];inp.value=n;inp.required=true;s.textContent=n;x.append(inp,s);g.appendChild(x)}w.appendChild(g);const sc=document.createElement('div');sc.className='scale';sc.innerHTML='<span>1 · Sangat tidak setuju</span><span>5 · Sangat setuju</span>';w.appendChild(sc);ratings.appendChild(w)});
+function esc(v){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function loadStats(){
+ const script=document.createElement('script'),callback='ahaFeedback'+Date.now();script.id='statsCallback';
+ window[callback]=data=>{delete window[callback];script.remove();if(!data||!data.success){document.getElementById('ratingCharts').textContent='Statistik belum dapat dimuatkan.';return}
+ document.getElementById('total').textContent=data.totalResponses;document.getElementById('overall').textContent=Number(data.averageSatisfaction).toFixed(2);
+ const chart=document.getElementById('ratingCharts');chart.innerHTML='';
+ data.ratings.forEach(item=>{const v=Number(item.average)||0,row=document.createElement('div');row.className='chartrow';row.innerHTML='<div class="charthead"><span>'+esc(item.label)+'</span><b>'+v.toFixed(2)+'/5</b></div><div class="track"><div class="fill" style="width:'+Math.max(0,Math.min(100,v/5*100))+'%"></div></div>';chart.appendChild(row)});
+ const classes=document.getElementById('classStats');classes.innerHTML='';data.classes.forEach(item=>{const row=document.createElement('div');row.className='classitem';row.innerHTML='<span>'+esc(item.className)+'<small style="display:block;color:var(--muted)">'+item.responses+' respons</small></span><strong>'+Number(item.average).toFixed(2)+'/5</strong>';classes.appendChild(row)});
+ };
+ script.onerror=()=>{document.getElementById('ratingCharts').textContent='Tidak dapat menyambung. Cuba muat semula.';delete window[callback];script.remove()};
+ script.src=API+'?callback='+callback+'&_='+Date.now();document.body.appendChild(script);
+}
+const form=document.getElementById('feedbackForm'),status=document.getElementById('formStatus'),btn=document.getElementById('submitBtn');let busy=false;
+form.addEventListener('submit',e=>{if(busy){e.preventDefault();return}if(!form.reportValidity()){e.preventDefault();return}busy=true;btn.disabled=true;btn.textContent='Menghantar...';status.className='status';status.textContent='Permintaan dihantar. Sila tunggu sebentar.';
+setTimeout(()=>{status.className='status ok';status.textContent='Penghantaran telah dimulakan. Tekan Muat Semula Statistik untuk menyemak jumlah respons selepas beberapa saat.';btn.disabled=false;btn.textContent='Hantar Maklum Balas';busy=false;form.reset();setTimeout(loadStats,2200)},1800)});
+document.getElementById('refreshBtn').addEventListener('click',loadStats);loadStats();
+
+// AUDIO: muzik latar lembut dan kesan bunyi dijana oleh pelayar.
+const audioState={on:false,volume:.35,ctx:null,master:null,musicTimer:null,step:0};
+const soundToggle=document.getElementById('soundToggle');
+const soundPanel=document.getElementById('soundPanel');
+const soundVolume=document.getElementById('soundVolume');
+function audioInit(){
+ if(audioState.ctx)return;
+ const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
+ audioState.ctx=new AC();audioState.master=audioState.ctx.createGain();
+ audioState.master.gain.value=0;audioState.master.connect(audioState.ctx.destination);
+}
+function playTone(freq,duration,type='sine',peak=.025,delay=0){
+ if(!audioState.on||!audioState.ctx)return;
+ const c=audioState.ctx,t=c.currentTime+delay,o=c.createOscillator(),g=c.createGain();
+ o.type=type;o.frequency.setValueAtTime(freq,t);g.gain.setValueAtTime(.0001,t);
+ g.gain.exponentialRampToValueAtTime(peak,t+.025);g.gain.exponentialRampToValueAtTime(.0001,t+duration);
+ o.connect(g);g.connect(audioState.master);o.start(t);o.stop(t+duration+.03);
+}
+function soundEffect(kind){
+ if(kind==='click')playTone(720,.09,'sine',.025);
+ if(kind==='submit'){playTone(523,.18,'sine',.035);playTone(659,.22,'sine',.035,.12);playTone(784,.28,'sine',.03,.25);}
+}
+function musicStep(){
+ if(!audioState.on||!audioState.ctx)return;
+ const notes=[261.63,329.63,392,329.63,293.66,349.23,440,349.23];
+ playTone(notes[audioState.step%notes.length],1.5,'sine',.009);audioState.step++;
+}
+function setAudio(on){
+ audioInit();if(!audioState.ctx)return;
+ audioState.on=on;const c=audioState.ctx;
+ if(on){c.resume();audioState.master.gain.cancelScheduledValues(c.currentTime);audioState.master.gain.setTargetAtTime(audioState.volume,c.currentTime,.08);
+  if(!audioState.musicTimer){musicStep();audioState.musicTimer=setInterval(musicStep,1450);}
+  soundToggle.textContent='🔊';soundToggle.setAttribute('aria-label','Tetapan bunyi (dihidupkan)');soundToggle.setAttribute('aria-pressed','true');
+ }else{audioState.master.gain.setTargetAtTime(0,c.currentTime,.06);if(audioState.musicTimer){clearInterval(audioState.musicTimer);audioState.musicTimer=null;}
+  soundToggle.textContent='🔇';soundToggle.setAttribute('aria-label','Hidupkan bunyi');soundToggle.setAttribute('aria-pressed','false');}
+}
+soundToggle.addEventListener('click',()=>{soundPanel.hidden=!soundPanel.hidden;if(audioState.on)soundEffect('click');});
+document.getElementById('soundOn').addEventListener('click',()=>setAudio(true));
+document.getElementById('soundOff').addEventListener('click',()=>setAudio(false));
+soundVolume.addEventListener('input',()=>{audioState.volume=Number(soundVolume.value)/100;document.getElementById('soundVolumeText').textContent=soundVolume.value+'%';if(audioState.on&&audioState.ctx)audioState.master.gain.setTargetAtTime(audioState.volume,audioState.ctx.currentTime,.05);});
+document.addEventListener('click',e=>{if(!e.target.closest('#soundControl'))soundPanel.hidden=true;});
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&audioState.on)setAudio(false);});
+
+})();
+</script>
+</body>
+</html>
