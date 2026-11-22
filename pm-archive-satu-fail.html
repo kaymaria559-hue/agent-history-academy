@@ -553,6 +553,10 @@ var QUESTIONS = [
      2) Jika pelayar/iframe menyekat navigasi itu, panel sandaran muncul
         dengan butang untuk membuka Pusat Misi dalam tab baharu (klik murid).
      Tidak bergantung kepada history.back(). */
+  // Penanda untuk Modul 01: buka Mission Control terus (tanpa intro)
+  function markReturnToMissionControl(){
+    try { localStorage.setItem('aha_return_mc', String(Date.now())); } catch(e){}
+  }
   function showHqFallback(){
     var box = document.getElementById('hqFallback');
     if(!box) return;
@@ -563,13 +567,14 @@ var QUESTIONS = [
   document.addEventListener('click', function(e){
     var t = e.target.closest('#hqNewTab, #hqClose');
     if(!t) return;
-    if(t.id === 'hqNewTab') t.setAttribute('href', MODULE01_URL); // pastikan URL terkini
+    if(t.id === 'hqNewTab'){ t.setAttribute('href', MODULE01_URL); markReturnToMissionControl(); } // pastikan URL terkini
     document.getElementById('hqFallback').hidden = true;
   }, true);
   document.querySelectorAll('[data-hq]').forEach(function(a){
     a.setAttribute('href', MODULE01_URL);
     a.setAttribute('target', '_top');
     a.addEventListener('click', function(){
+      markReturnToMissionControl();
       var left = false;
       window.addEventListener('pagehide', function(){ left = true; }, {once:true});
       setTimeout(function(){ if(!left && document.visibilityState === 'visible') showHqFallback(); }, 2500);

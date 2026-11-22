@@ -983,6 +983,33 @@ button{font:inherit;cursor:pointer}
   resize();
   if(!reduceMotion) requestAnimationFrame(loop);
 
+  /* ---------- Kembali terus ke Mission Control ----------
+     Modul 02 dan 03 menyimpan penanda 'aha_return_mc' (masa klik) dalam
+     storan pelayar sebelum membawa murid kembali ke laman utama.
+     Ketiga-tiga modul berada pada domain GitHub Pages yang sama, jadi
+     Modul 01 boleh membaca penanda itu walaupun dibuka melalui Google Sites.
+     - Penanda baru (kurang 3 minit): terus buka Mission Control.
+     - Tiada penanda (lawatan biasa): Intro Cinematic dipaparkan seperti asal.
+     Penanda dipadam selepas dibaca, supaya lawatan seterusnya kembali normal.
+     URL dengan #mission-control juga membuka Mission Control terus. */
+  function wantsMissionControl(){
+    var fromHash = /^#(mission-control|pusat-misi)$/i.test(location.hash);
+    var fresh = false;
+    try {
+      var t = parseInt(localStorage.getItem('aha_return_mc'), 10);
+      localStorage.removeItem('aha_return_mc');
+      var age = Date.now() - t;
+      fresh = !isNaN(t) && age >= 0 && age < 180000;
+    } catch(e){}
+    return fromHash || fresh;
+  }
+  if(wantsMissionControl()){
+    var s1 = document.getElementById('s1'), s5 = document.getElementById('s5');
+    s1.classList.remove('active'); s1.setAttribute('aria-hidden','true');
+    s5.classList.add('active'); s5.removeAttribute('aria-hidden');
+    previous = 1; current = 5;
+  }
+
   renderMissions();
 })();
 </script>
