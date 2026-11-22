@@ -305,6 +305,18 @@ button,a{cursor:pointer}
   *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;animation-delay:0s!important;transition-duration:.001ms!important}
   .bg-scan::before{display:none}
 }
+
+/* ---------- Leaderboard ---------- */
+.lb-wrap{max-width:980px;margin:0 auto;padding:clamp(18px,4vw,32px)}
+.lb-tabs{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:18px 0}
+.lb-tabs .btn.active{background:var(--cyan);color:var(--bg);border-color:var(--cyan)}
+.lb-table{width:100%;border-collapse:collapse;margin-top:14px;font-size:.9rem}
+.lb-table th,.lb-table td{padding:11px 9px;border-bottom:1px solid var(--line);text-align:left}
+.lb-table th{font:700 .65rem var(--font-display);letter-spacing:.1em;color:var(--cyan)}
+.lb-table td:first-child{color:var(--gold);font-weight:800}
+.lb-status{min-height:26px;text-align:center;color:var(--muted);font-size:.88rem;margin:10px 0}
+.lb-scroll{overflow-x:auto}
+@media(max-width:560px){.lb-table{font-size:.78rem}.lb-table th,.lb-table td{padding:8px 5px}}
 </style>
 </head>
 <body>
@@ -465,9 +477,36 @@ button,a{cursor:pointer}
         </div>
         <div class="btn-row">
           <button class="btn" type="button" id="btnRetry">Cuba Lagi</button>
-          <a class="btn btn-gold" data-hq href="#">Kembali ke Pusat Misi</a>
+          <button class="btn btn-gold" type="button" id="btnLeaderboard">View Leaderboard</button>
+          <a class="btn btn-ghost" data-hq href="#">Kembali ke Pusat Misi</a>
         </div>
-        <p class="hint">Keputusan dipaparkan pada peranti ini sahaja. Guru boleh menyemak skrin ini atau murid boleh mengambil tangkapan skrin.</p>
+        <p class="hint" id="submitStatus">Keputusan akan dihantar untuk dikemas kini dalam Leaderboard.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= LEADERBOARD ================= -->
+  <section class="screen top" id="leaderboard" aria-label="Leaderboard Ejen Sejarah">
+    <div class="container">
+      <div class="panel hud lb-wrap">
+        <span class="eyebrow">Agent History Academy · Kedudukan Ejen</span>
+        <h2 class="heading" style="text-align:center">TOP AGENTS</h2>
+        <p class="sub" style="text-align:center">Global Top 10 dan Top 10 mengikut kelas</p>
+        <div class="lb-tabs" role="group" aria-label="Kategori leaderboard">
+          <button class="btn btn-gold active" type="button" data-lb="global">Keseluruhan</button>
+          <button class="btn" type="button" data-lb="6 Al Farabi">6 Al Farabi</button>
+          <button class="btn" type="button" data-lb="6 Al Ghazali">6 Al Ghazali</button>
+          <button class="btn" type="button" data-lb="6 Al Syafie">6 Al Syafie</button>
+        </div>
+        <p class="lb-status" id="lbStatus" aria-live="polite">Memuatkan kedudukan…</p>
+        <div class="lb-scroll">
+          <table class="lb-table"><thead><tr><th>Kedudukan</th><th>Nama</th><th>Kelas</th><th>Markah</th><th>Peratus</th><th>Lencana</th></tr></thead><tbody id="lbRows"><tr><td colspan="6" style="text-align:center">Memuatkan data…</td></tr></tbody></table>
+        </div>
+        <div class="btn-row">
+          <button class="btn" type="button" id="btnLbRefresh">Muat Semula</button>
+          <button class="btn btn-gold" type="button" id="btnLbBack">Kembali ke Keputusan</button>
+        </div>
+        <p class="hint">Leaderboard memaparkan nama ringkas, kelas dan pencapaian terbaik sahaja.</p>
       </div>
     </div>
   </section>
@@ -505,6 +544,7 @@ button,a{cursor:pointer}
 
 /* URL Pusat Misi (laman utama Google Sites) – sama seperti Modul 02, 03 dan 04 */
 var MODULE01_URL = 'https://sites.google.com/moe-dl.edu.my/ejen-akademi-sejarah/';
+var LEADERBOARD_API = 'https://script.google.com/macros/s/AKfycbwhFodcZuvG21M4BlyX0SyeXtUGPFIXUq0JXMlJo21LqETuufnx3JriMxKQDOo0y1F29A/exec';
 
 /* ---------------------------------------------------------
    SUMBER
@@ -625,7 +665,7 @@ var RANKS = [
   var R;          // cubaan tahap yang sedang berjalan
   var LOG = [];   // rekod keputusan sesi (semua permainan dalam sesi ini)
   try { var sl = sessionStorage.getItem('aha_m05_log'); if(sl) LOG = JSON.parse(sl) || []; } catch(e){}
-  function freshGame(){ return { best:[null,null,null], passed:[false,false,false], tries:[0,0,0], finalShown:false, started:new Date() }; }
+  function freshGame(){ return { best:[null,null,null], passed:[false,false,false], tries:[0,0,0], finalShown:false, leaderboardSubmitted:false, started:new Date() }; }
   function saveLog(){ try { sessionStorage.setItem('aha_m05_log', JSON.stringify(LOG.slice(-40))); } catch(e){} }
   function total(){ return G.best.reduce(function(s, b){ return s + (b ? b.score : 0); }, 0); }
   function unlocked(i){ return i === 0 || G.passed[i - 1]; }
@@ -846,10 +886,63 @@ var RANKS = [
     }).join('');
     var d = new Date();
     $('fStamp').textContent = 'Dijana: ' + d.getDate() + '/' + (d.getMonth() + 1) + '/' + d.getFullYear() + ', ' + hhmm(d) + ' · Markah akhir dikira daripada markah terbaik setiap tahap (tiada markah berganda).';
+    submitLeaderboardResult(t, pct, rk.name);
     if(!G.finalShown){ G.finalShown = true; setTimeout(function(){ sndFinal(rk.lv); }, reduceMotion ? 0 : 350); }
   }
   // Cuba Lagi: permainan baharu, semua markah bermula semula (tiada markah berganda)
   $('btnRetry').addEventListener('click', function(){ G = freshGame(); renderMap(); show('map'); });
+
+  // Hantar satu keputusan akhir bagi setiap sesi permainan. Web App menerima JSON POST.
+  function submitLeaderboardResult(score, percentage, badgeName){
+    if(G.leaderboardSubmitted) return;
+    G.leaderboardSubmitted = true;
+    var status = $('submitStatus');
+    status.textContent = 'Menghantar keputusan ke Leaderboard…';
+    var payload = {displayName:AGENT.name, studentClass:AGENT.cls, score:score};
+    fetch(LEADERBOARD_API, {method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify(payload), keepalive:true})
+      .then(function(){ status.textContent = 'Permintaan penghantaran telah dihantar. Buka Leaderboard sebentar lagi untuk menyemak rekod.'; })
+      .catch(function(){ G.leaderboardSubmitted = false; status.textContent = 'Penghantaran belum berjaya. Sila cuba butang Muat Semula Leaderboard kemudian.'; });
+  }
+  var lbCurrent = 'global';
+  function loadLeaderboard(category){
+    lbCurrent = category || 'global';
+    var status = $('lbStatus'), rows = $('lbRows');
+    status.textContent = 'Memuatkan kedudukan…';
+    rows.innerHTML = '<tr><td colspan="6" style="text-align:center">Memuatkan data…</td></tr>';
+    document.querySelectorAll('[data-lb]').forEach(function(b){
+      var active = b.getAttribute('data-lb') === lbCurrent;
+      b.classList.toggle('active', active);
+      b.classList.toggle('btn-gold', active);
+    });
+    var callback = 'ahaLeaderboardCallback';
+    window[callback] = function(data){
+      try {
+        if(!data || !data.success) throw new Error(data && data.message ? data.message : 'Data tidak tersedia.');
+        var list = data.leaderboard || [];
+        if(!list.length){ rows.innerHTML = '<tr><td colspan="6" style="text-align:center">Belum ada rekod untuk kategori ini.</td></tr>'; }
+        else rows.innerHTML = list.map(function(item){
+          return '<tr><td>#' + Number(item.rank) + '</td><td>' + esc(item.displayName) + '</td><td>' + esc(item.studentClass) + '</td><td><b>' + Number(item.score) + '/30</b></td><td>' + Number(item.percentage) + '%</td><td>' + esc(item.badge) + '</td></tr>';
+        }).join('');
+        status.textContent = list.length + ' rekod dipaparkan.';
+      } catch(err){ status.textContent = 'Tidak dapat memuatkan leaderboard: ' + err.message; rows.innerHTML = '<tr><td colspan="6" style="text-align:center">Sila cuba lagi.</td></tr>'; }
+      var old = document.getElementById('ahaLbJsonp'); if(old) old.remove();
+      try { delete window[callback]; } catch(e) { window[callback] = undefined; }
+    };
+    var old = document.getElementById('ahaLbJsonp'); if(old) old.remove();
+    var script = document.createElement('script'); script.id = 'ahaLbJsonp';
+    script.onerror = function(){ status.textContent = 'Sambungan leaderboard gagal. Semak deployment Web App dan cuba lagi.'; rows.innerHTML = '<tr><td colspan="6" style="text-align:center">Data tidak dapat dimuatkan.</td></tr>'; try { delete window[callback]; } catch(e){} script.remove(); };
+    var query = lbCurrent === 'global' ? '?action=global' : '?action=class&class=' + encodeURIComponent(lbCurrent);
+    script.src = LEADERBOARD_API + query + '&callback=' + callback;
+    document.body.appendChild(script);
+  }
+  $('btnLeaderboard').addEventListener('click', function(){ loadLeaderboard('global'); show('leaderboard'); });
+  $('leaderboard').addEventListener('click', function(e){
+    var tab = e.target.closest('[data-lb]');
+    if(tab){ loadLeaderboard(tab.getAttribute('data-lb')); return; }
+    if(e.target.closest('#btnLbRefresh')){ loadLeaderboard(lbCurrent); return; }
+    if(e.target.closest('#btnLbBack')) show('final');
+  });
+
 
   document.addEventListener('keydown', function(e){
     if(e.key === 'Escape' && !$('hqFallback').hidden){ $('hqFallback').hidden = true; }
