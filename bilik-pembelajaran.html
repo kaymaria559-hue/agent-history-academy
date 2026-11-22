@@ -148,6 +148,9 @@ button,a{font:inherit;cursor:pointer}
 .audio-ui{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:12px;border-radius:12px;background:rgba(7,20,38,.6);border:1px solid var(--line)}
 .audio-ui input[type=range]{width:100%;accent-color:var(--gold)}
 .audio-ui .time{font:700 .74rem var(--font-display);color:var(--muted);white-space:nowrap}
+.audio-ui{grid-template-columns:auto 1fr auto auto}
+.audio-ui .avol{display:flex;align-items:center;gap:6px;font:700 .6rem var(--font-display);letter-spacing:.12em;color:var(--muted)}
+.audio-ui .avol input{width:90px}
 .play{width:52px;height:52px;border-radius:50%;border:2px solid var(--gold);background:linear-gradient(135deg,var(--gold-light),var(--gold));color:#1a1205;display:grid;place-items:center}
 .play svg{width:22px;height:22px;fill:currentColor}
 details.trans{margin-top:10px;border-radius:10px;border:1px solid var(--line);background:rgba(7,20,38,.5)}
@@ -306,6 +309,8 @@ tr.m td{background:rgba(214,173,85,.06)}
   .crow{font-size:.72rem}
   .audio-ui{grid-template-columns:auto 1fr}
   .audio-ui .time{grid-column:1/-1;text-align:right}
+  .audio-ui .avol{grid-column:1/-1}
+  .audio-ui .avol input{width:100%}
   .preview iframe{height:360px}
 }
 @media (max-width:480px){
@@ -548,25 +553,25 @@ var MODULE01_URL = 'https://sites.google.com/moe-dl.edu.my/ejen-akademi-sejarah/
    ========================================================= */
 var MEDIA = {
   videos: [
-    { title:'Pengenalan Perdana Menteri Malaysia',
+    { title:'Kenali 10 Perdana Menteri Malaysia',
       desc:'Video pengenalan tentang sejarah Perdana Menteri Malaysia dan perkembangan kepimpinan negara sejak tahun 1957.',
-      url:'' }
+      url:'https://www.youtube.com/watch?v=K5rE1-p-8nI' }
   ],
   audios: [
-    { title:'Audio: Mengenali Perdana Menteri Malaysia',
+    { title:'Audio Penerangan: Kenali Pemimpin Negara Malaysia',
       desc:'Rakaman audio ringkas tentang nama dan biodata Perdana Menteri Malaysia.',
-      url:'', transcript:'' }
+      url:'https://kaymaria559-hue.github.io/agent-history-academy/audio-penerangan.mp3', transcript:'' }
   ],
   podcasts: [
-    { title:'Podcast Ejen Sejarah – Episod 1: Kepimpinan Negara',
+    { title:'Bicara Sejarah – Mengenali Perdana Menteri Malaysia',
       desc:'Episod podcast pendidikan mengenai sejarah kepimpinan negara.',
-      url:'', transcript:'' }
+      url:'https://kaymaria559-hue.github.io/agent-history-academy/podcast-sejarah.mp3', transcript:'' }
   ],
   docs: [
-    { type:'Nota Pembelajaran', title:'Nota Ringkas: Perdana Menteri Malaysia', desc:'Nota ringkas nama, biodata dan sumbangan Perdana Menteri.', url:'', download:true },
-    { type:'Petikan Buku Teks', title:'Buku Teks Sejarah Tahun 6 – Unit 7 (ms. 108–115)', desc:'Petikan halaman buku teks tentang Perdana Menteri Malaysia.', url:'', download:true },
-    { type:'Dokumen Rujukan', title:'DSKP KSSR Sejarah Tahun 6', desc:'Dokumen Standard Kurikulum dan Pentaksiran Sejarah Tahun 6 (pautan dibekalkan oleh guru).', url:'https://ipim.jmm.gov.my/sites/default/files/dockokurikulum/DSKP-KSSR-Sejarah-Tahun-6.pdf', download:true },
-    { type:'Lembaran Aktiviti', title:'Lembaran Aktiviti: Perdana Menteri Malaysia', desc:'Lembaran kerja untuk diisi oleh murid.', url:'', download:true }
+    { type:'PDF 01 · Nota Pembelajaran', title:'Nota Pembelajaran: Pemimpin Negara (Tahun 6)', desc:'Nota ringkas nama, biodata dan sumbangan Perdana Menteri.', url:'https://kaymaria559-hue.github.io/agent-history-academy/Nota_Pembelajaran_Pemimpin_Negara_Tahun_6.pdf', download:true },
+    { type:'PDF 02 · Nota Tambahan', title:'Bidang Tugas, Sumbangan dan Pencapaian Perdana Menteri', desc:'Bidang tugas Perdana Menteri serta sumbangan dan pencapaian pemimpin negara.', url:'https://kaymaria559-hue.github.io/agent-history-academy/Bidang_Tugas_Sumbangan_Pencapaian_PM.pdf', download:true },
+    { type:'PDF 03 · Lembaran Aktiviti', title:'Lembaran Aktiviti: Kenali dan Hargai Pemimpin Negara', desc:'Lembaran kerja untuk diisi oleh murid.', url:'https://kaymaria559-hue.github.io/agent-history-academy/Lembaran_Aktiviti_Kenali_dan_Hargai_Pemimpin_Negara.pdf', download:true },
+    { type:'Dokumen Rujukan', title:'DSKP KSSR Sejarah Tahun 6', desc:'Dokumen Standard Kurikulum dan Pentaksiran Sejarah Tahun 6 (pautan dibekalkan oleh guru).', url:'https://ipim.jmm.gov.my/sites/default/files/dockokurikulum/DSKP-KSSR-Sejarah-Tahun-6.pdf', download:true }
   ]
 };
 
@@ -752,7 +757,7 @@ var QUIZ = [
       } else {
         var id = ytId(v.url), player, ctrls;
         if(id){
-          player = '<iframe src="https://www.youtube-nocookie.com/embed/' + id + '?rel=0" title="' + esc(v.title) + '" allow="encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>';
+          player = '<iframe class="yt" src="https://www.youtube-nocookie.com/embed/' + id + '?rel=0&playsinline=1&enablejsapi=1" title="' + esc(v.title) + '" allow="encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>';
           ctrls = '<span class="small">Gunakan butang main pada video YouTube.</span>';
         } else {
           player = '<video id="vid' + i + '" src="' + esc(v.url) + '" preload="metadata" playsinline controls></video>';
@@ -800,9 +805,10 @@ var QUIZ = [
       body = '<audio id="au' + key + '" src="' + esc(a.url) + '" preload="metadata"></audio>' +
         '<div class="audio-ui"><button class="play" type="button" data-aplay="' + key + '" aria-label="Main audio">' + IC.play + '</button>' +
         '<input type="range" min="0" max="100" step="0.1" value="0" data-aseek="' + key + '" aria-label="Kedudukan audio">' +
-        '<span class="time" id="at' + key + '">0:00 / 0:00</span></div>';
+        '<span class="time" id="at' + key + '">0:00 / 0:00</span>' +
+        '<label class="avol"><span aria-hidden="true">VOL</span><input type="range" min="0" max="100" step="1" value="100" data-avol="' + key + '" aria-label="Volume ' + esc(a.title) + '"></label></div>';
     }
-    var tr = a.transcript ? esc(a.transcript) : 'Transkrip akan dipaparkan selepas fail audio dan transkrip dimasukkan oleh guru.';
+    var tr = a.transcript ? esc(a.transcript) : 'Transkrip akan dipaparkan selepas guru memasukkannya.';
     return '<article class="panel hud mcard"><span class="eyebrow">' + label + '</span> ' + (a.url ? '' : '<span class="tag wait">MENUNGGU BAHAN</span>') +
       '<h3>' + esc(a.title) + '</h3><p class="desc">' + esc(a.desc) + '</p>' + body +
       '<details class="trans"><summary>TRANSKRIP RINGKAS</summary><div>' + tr + '</div></details></article>';
@@ -824,10 +830,16 @@ var QUIZ = [
         if(au.paused){ pauseAll(au); var pr = au.play(); if(pr && pr.catch) pr.catch(function(){}); } else au.pause();
       });
       seek.addEventListener('input', function(){ if(au.duration) au.currentTime = seek.value / 100 * au.duration; });
+      var vol = document.querySelector('[data-avol="' + k + '"]');
+      vol.addEventListener('input', function(){ au.volume = vol.value / 100; });
     });
   }
   function pauseAll(except){
     document.querySelectorAll('audio,video').forEach(function(m){ if(m !== except && !m.paused) m.pause(); });
+    // hentikan video YouTube juga (supaya tiada dua audio serentak)
+    document.querySelectorAll('iframe.yt').forEach(function(f){
+      if(f !== except && f.contentWindow) try { f.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*'); } catch(e){}
+    });
   }
 
   /* =========================================================
@@ -1231,7 +1243,7 @@ var QUIZ = [
   window.addEventListener('blur', function(){
     setTimeout(function(){
       var a = document.activeElement;
-      if(a && a.tagName === 'IFRAME' && a.closest('#videoList')){ S.yt = true; updateMusic(); }
+      if(a && a.tagName === 'IFRAME' && a.closest('#videoList')){ pauseAll(a); S.yt = true; updateMusic(); }
     }, 0);
   });
   document.addEventListener('visibilitychange', function(){
