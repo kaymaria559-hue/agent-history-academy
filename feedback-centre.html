@@ -47,11 +47,11 @@ button{border:1px solid var(--gold);border-radius:999px;padding:12px 20px;backgr
 <label for="suggestion">Cadangan penambahbaikan (pilihan)</label><textarea id="suggestion" name="suggestion" maxlength="500" placeholder="Apakah yang boleh kami tambah baik?"></textarea>
 <div class="actions"><button id="submitBtn" type="submit">Hantar Maklum Balas</button><button class="secondary" type="reset">Kosongkan</button></div>
 <div class="status" id="formStatus" role="status">Borang ini tidak meminta nama penuh. Sila berikan jawapan yang jujur dan sopan.</div>
-</form><iframe name="frameSink" id="frameSink" title="Penghantaran maklum balas"></iframe>
+</form><div id="thankYou" class="status ok" role="status" hidden style="padding:22px;text-align:center"><h2 style="color:var(--gold);margin:0 0 10px">TERIMA KASIH, EJEN!</h2><p style="font-weight:800;color:var(--white)">Terima kasih kerana mengikuti misi ejen!</p><p>Maklum balas anda telah berjaya dihantar.</p><p>Pandangan anda membantu kami menambah baik Agent History Academy.</p><p style="color:var(--gold2);font-weight:800;margin-top:8px">Syabas, ejen!</p></div><iframe name="frameSink" id="frameSink" title="Penghantaran maklum balas"></iframe>
 </section>
 <section class="panel">
 <h2>02 / FEEDBACK ANALYTICS</h2><p class="sub">Statistik agregat berdasarkan respons yang diterima.</p>
-<div class="stats"><div class="stat"><strong id="total">—</strong><small>Jumlah respons</small></div><div class="stat"><strong id="overall">—</strong><small>Purata kepuasan / 5</small></div></div>
+<div class="stats"><div class="stat"><strong id="total">— / 30</strong><small>Respons diterima / sasaran 30</small><div class="track" style="margin-top:10px"><div class="fill" id="targetFill" style="width:0%"></div></div><small id="targetPct">0% daripada sasaran</small></div><div class="stat"><strong id="overall">—</strong><small>Purata kepuasan / 5</small></div></div>
 <h3 style="font-size:.85rem;color:var(--cyan);letter-spacing:.1em">PURATA PENILAIAN</h3><div id="ratingCharts"><p class="note">Memuatkan statistik...</p></div>
 <h3 style="font-size:.85rem;color:var(--cyan);letter-spacing:.1em;margin-top:23px">ANALISIS MENGIKUT KELAS</h3><div id="classStats" class="classlist"><p class="note">Memuatkan analisis kelas...</p></div>
 <div class="actions"><button class="secondary" type="button" id="refreshBtn">Muat Semula Statistik</button></div>
@@ -84,7 +84,11 @@ function esc(v){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;',
 function loadStats(){
  const script=document.createElement('script'),callback='ahaFeedback'+Date.now();script.id='statsCallback';
  window[callback]=data=>{delete window[callback];script.remove();if(!data||!data.success){document.getElementById('ratingCharts').textContent='Statistik belum dapat dimuatkan.';return}
- document.getElementById('total').textContent=data.totalResponses;document.getElementById('overall').textContent=Number(data.averageSatisfaction).toFixed(2);
+ const count=Number(data.totalResponses)||0;
+ document.getElementById('total').textContent=count+' / 30';
+ document.getElementById('targetFill').style.width=Math.min(100,count/30*100)+'%';
+ document.getElementById('targetPct').textContent=Math.min(100,(count/30*100)).toFixed(1)+'% daripada sasaran';
+ document.getElementById('overall').textContent=Number(data.averageSatisfaction).toFixed(2);
  const chart=document.getElementById('ratingCharts');chart.innerHTML='';
  data.ratings.forEach(item=>{const v=Number(item.average)||0,row=document.createElement('div');row.className='chartrow';row.innerHTML='<div class="charthead"><span>'+esc(item.label)+'</span><b>'+v.toFixed(2)+'/5</b></div><div class="track"><div class="fill" style="width:'+Math.max(0,Math.min(100,v/5*100))+'%"></div></div>';chart.appendChild(row)});
  const classes=document.getElementById('classStats');classes.innerHTML='';data.classes.forEach(item=>{const row=document.createElement('div');row.className='classitem';row.innerHTML='<span>'+esc(item.className)+'<small style="display:block;color:var(--muted)">'+item.responses+' respons</small></span><strong>'+Number(item.average).toFixed(2)+'/5</strong>';classes.appendChild(row)});
@@ -92,9 +96,32 @@ function loadStats(){
  script.onerror=()=>{document.getElementById('ratingCharts').textContent='Tidak dapat menyambung. Cuba muat semula.';delete window[callback];script.remove()};
  script.src=API+'?callback='+callback+'&_='+Date.now();document.body.appendChild(script);
 }
-const form=document.getElementById('feedbackForm'),status=document.getElementById('formStatus'),btn=document.getElementById('submitBtn');let busy=false;
-form.addEventListener('submit',e=>{if(busy){e.preventDefault();return}if(!form.reportValidity()){e.preventDefault();return}busy=true;btn.disabled=true;btn.textContent='Menghantar...';status.className='status';status.textContent='Permintaan dihantar. Sila tunggu sebentar.';
-setTimeout(()=>{status.className='status ok';status.textContent='Penghantaran telah dimulakan. Tekan Muat Semula Statistik untuk menyemak jumlah respons selepas beberapa saat.';btn.disabled=false;btn.textContent='Hantar Maklum Balas';busy=false;form.reset();setTimeout(loadStats,2200)},1800)});
+const form=document.getElementById('feedbackForm'),status=document.getElementById('formStatus'),btn=document.getElementById('submitBtn');
+const sink=document.getElementById('frameSink'),thankYou=document.getElementById('thankYou');
+let busy=false, awaitingResponse=false, submitTimer=null;
+form.addEventListener('submit',e=>{
+ if(busy){e.preventDefault();return}
+ if(!form.reportValidity()){e.preventDefault();return}
+ busy=true;awaitingResponse=true;btn.disabled=true;btn.textContent='Menghantar...';
+ status.className='status';status.textContent='Maklum balas sedang dihantar. Sila tunggu dan jangan tutup halaman.';
+ submitTimer=setTimeout(()=>{
+   if(awaitingResponse){
+     status.className='status err';
+     status.textContent='Penghantaran belum dapat disahkan. Sila semak sambungan internet dan cuba semula jika respons belum direkodkan.';
+     btn.disabled=false;btn.textContent='Cuba Hantar Semula';busy=false;awaitingResponse=false;
+   }
+ },12000);
+});
+sink.addEventListener('load',()=>{
+ if(!awaitingResponse)return;
+ awaitingResponse=false;
+ clearTimeout(submitTimer);
+ form.hidden=true;
+ thankYou.hidden=false;
+ status.className='status ok';
+ btn.disabled=false;
+ setTimeout(loadStats,1200);
+});
 document.getElementById('refreshBtn').addEventListener('click',loadStats);loadStats();
 
 // AUDIO: muzik latar lembut dan kesan bunyi dijana oleh pelayar.
