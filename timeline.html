@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jejak Kronologi – Agent History Academy</title>
+<meta name="description" content="Modul 03 Agent History Academy: Misi Menyusun Perdana Menteri Malaysia (Sejarah Tahun 6).">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Nunito+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* =========================================================
+   1. TOKEN WARNA & ASAS (sama seperti Modul 01 dan 02)
+   ========================================================= */
+:root{
+  --bg:#071426; --bg2:#10233D; --gold:#D6AD55; --gold-light:#F0D28E;
+  --cyan:#53D8E8; --white:#F5F7FA; --muted:#A9B7C9;
+  --panel:rgba(16,35,61,.72); --line:rgba(83,216,232,.28);
+  --ok:#4ade80; --bad:#f87171;
+  --radius:16px;
+  --font-display:'Orbitron','Segoe UI',system-ui,sans-serif;
+  --font-body:'Nunito Sans','Segoe UI',system-ui,-apple-system,Roboto,Arial,sans-serif;
+  --ease:cubic-bezier(.22,.8,.26,1);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--bg);color:var(--white);font-family:var(--font-body);font-size:16px;line-height:1.6;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+button,a{font:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--cyan);outline-offset:3px}
+
+/* =========================================================
+   2. LATAR BELAKANG
+   ========================================================= */
+.bg-layer{position:fixed;inset:0;pointer-events:none;z-index:0}
+.bg-gradient{background:radial-gradient(ellipse 80% 60% at 50% -10%,rgba(83,216,232,.16),transparent 60%),radial-gradient(ellipse 60% 50% at 100% 100%,rgba(214,173,85,.10),transparent 60%),linear-gradient(180deg,var(--bg) 0%,#0a1a30 60%,var(--bg) 100%)}
+.bg-grid{background-image:linear-gradient(rgba(83,216,232,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(83,216,232,.06) 1px,transparent 1px);background-size:48px 48px;mask-image:radial-gradient(ellipse at center,#000 30%,transparent 80%);-webkit-mask-image:radial-gradient(ellipse at center,#000 30%,transparent 80%)}
+#particles{position:fixed;inset:0;z-index:0;pointer-events:none}
+.bg-scan{overflow:hidden}
+.bg-scan::before{content:"";position:absolute;left:0;right:0;height:140px;top:-140px;background:linear-gradient(180deg,transparent,rgba(83,216,232,.07),transparent);animation:scanMove 7s linear infinite}
+.bg-scan::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(255,255,255,.018) 0 1px,transparent 1px 3px)}
+@keyframes scanMove{to{transform:translateY(calc(100vh + 280px))}}
+
+/* =========================================================
+   3. SISTEM SKRIN
+   ========================================================= */
+.app{position:relative;z-index:1;min-height:100vh;min-height:100dvh;overflow-x:hidden;overflow-x:clip}
+.screen{display:none;min-height:100vh;min-height:100dvh;flex-direction:column;align-items:center;justify-content:center;padding:32px 16px 40px}
+.screen.active{display:flex;animation:screenIn .6s var(--ease) both}
+.screen.top{justify-content:flex-start;padding-top:28px}
+@keyframes screenIn{from{opacity:0;transform:scale(1.015)}to{opacity:1;transform:none}}
+.container{width:100%;max-width:1120px;margin:0 auto}
+.curtain{position:fixed;inset:0;z-index:50;pointer-events:none;background:var(--bg);opacity:0;transition:opacity .3s ease}
+.curtain.show{opacity:.85}
+
+/* =========================================================
+   4. KOMPONEN UMUM
+   ========================================================= */
+.eyebrow{font-family:var(--font-display);font-size:.72rem;letter-spacing:.32em;color:var(--cyan);text-transform:uppercase}
+.heading{font-family:var(--font-display);font-weight:800;font-size:clamp(1.5rem,4vw,2.5rem);letter-spacing:.06em;color:var(--gold);text-shadow:0 0 24px rgba(214,173,85,.35);line-height:1.2}
+.sub{color:var(--muted);font-size:clamp(.95rem,2vw,1.1rem)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);box-shadow:0 20px 60px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.04);position:relative}
+.hud::before,.hud::after{content:"";position:absolute;width:22px;height:22px;border:2px solid var(--gold);pointer-events:none}
+.hud::before{top:-1px;left:-1px;border-right:0;border-bottom:0;border-top-left-radius:var(--radius)}
+.hud::after{bottom:-1px;right:-1px;border-left:0;border-top:0;border-bottom-right-radius:var(--radius)}
+.btn-row{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:24px}
+.btn{min-height:48px;padding:12px 24px;border-radius:999px;font-family:var(--font-display);font-size:.8rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;border:1.5px solid var(--cyan);background:rgba(83,216,232,.06);color:var(--cyan);text-decoration:none;display:inline-flex;align-items:center;justify-content:center;text-align:center;transition:transform .2s var(--ease),background .2s,box-shadow .2s,color .2s,opacity .2s}
+.btn:hover{background:rgba(83,216,232,.16);box-shadow:0 0 22px rgba(83,216,232,.35);transform:translateY(-2px)}
+.btn-gold{border-color:var(--gold);color:#1a1205;background:linear-gradient(135deg,var(--gold-light),var(--gold) 55%,#b48a35)}
+.btn-gold:hover{background:linear-gradient(135deg,#fff0c4,var(--gold-light) 50%,var(--gold));box-shadow:0 0 28px rgba(214,173,85,.5);color:#1a1205}
+.btn-ghost{border-color:rgba(169,183,201,.5);color:var(--muted);background:transparent}
+.btn-ghost:hover{color:var(--white);border-color:var(--white);background:rgba(255,255,255,.06);box-shadow:none}
+.btn-lg{min-height:58px;padding:16px 40px;font-size:1rem}
+.btn[disabled]{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none}
+.btn[hidden]{display:none}
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+
+/* =========================================================
+   5. SKRIN INTRO
+   ========================================================= */
+#intro{text-align:center}
+.emblem{width:120px;height:120px;margin:0 auto 26px;animation:fadeUp 1s var(--ease) both}
+.emblem svg{width:100%;height:100%;filter:drop-shadow(0 0 18px rgba(83,216,232,.55))}
+.emblem .ring{animation:spin 18s linear infinite;transform-origin:50% 50%}
+@keyframes spin{to{transform:rotate(360deg)}}
+.intro-title{font-family:var(--font-display);font-weight:800;font-size:clamp(2rem,8vw,4.6rem);letter-spacing:.1em;line-height:1.08;background:linear-gradient(100deg,#9c7628 0%,var(--gold) 25%,#fff3cf 45%,var(--gold) 60%,#9c7628 100%);background-size:250% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:titleReveal 1.4s var(--ease) .3s both,shine 5s linear 1.8s infinite}
+@keyframes titleReveal{from{opacity:0;letter-spacing:.5em;filter:blur(10px)}to{opacity:1;letter-spacing:.1em;filter:none}}
+@keyframes shine{to{background-position:-250% 0}}
+.intro-mission{margin-top:16px;font-family:var(--font-display);font-weight:600;font-size:clamp(.82rem,2.6vw,1.25rem);letter-spacing:.16em;color:var(--cyan);animation:fadeUp .9s var(--ease) 1s both}
+.intro-story{max-width:680px;margin:28px auto 0;padding:clamp(20px,3.5vw,32px);text-align:left;animation:fadeUp .9s var(--ease) 1.3s both}
+.intro-story p{margin-bottom:10px}
+.intro-story p:first-child{font-weight:800;color:var(--gold);font-size:1.1rem}
+.intro-story p:last-child{margin-bottom:0;color:var(--cyan);font-weight:700}
+#intro .btn-row{animation:fadeUp .9s var(--ease) 1.6s both}
+
+/* =========================================================
+   6. SKRIN PERMAINAN
+   ========================================================= */
+.game-top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:18px}
+.game-layout{display:grid;grid-template-columns:300px 1fr;gap:22px;align-items:start}
+.side{padding:20px;position:sticky;top:16px}
+.side h3{font:700 .76rem var(--font-display);letter-spacing:.2em;color:var(--cyan);margin-bottom:10px}
+.howto{list-style:none;display:grid;gap:8px;font-size:.93rem;counter-reset:s}
+.howto li{position:relative;padding-left:32px}
+.howto li::before{counter-increment:s;content:counter(s);position:absolute;left:0;top:1px;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font:800 .7rem var(--font-display);color:#1a1205;background:var(--gold)}
+.steps{display:flex;gap:6px;margin:18px 0 6px}
+.steps span{flex:1;padding:6px 4px;border-radius:8px;text-align:center;font:700 .6rem var(--font-display);letter-spacing:.08em;color:var(--muted);border:1px solid rgba(169,183,201,.25)}
+.steps span.on{color:var(--bg);background:var(--cyan);border-color:var(--cyan)}
+.steps span.done{color:#1a1205;background:var(--gold);border-color:var(--gold)}
+.stat{display:flex;justify-content:space-between;font-size:.9rem;padding:8px 0;border-bottom:1px dashed rgba(169,183,201,.2)}
+.stat span:first-child{color:var(--muted)}
+.stat b{color:var(--gold)}
+.progress{height:10px;border-radius:99px;background:rgba(7,20,38,.8);border:1px solid var(--line);overflow:hidden;margin-top:6px}
+.progress i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--cyan),var(--gold));transition:width .6s var(--ease);box-shadow:0 0 12px var(--cyan)}
+.side .btn{width:100%;margin-top:12px}
+
+/* Senarai kad */
+.board{padding:18px}
+.board-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px;font-size:.85rem;color:var(--muted)}
+.board-head b{font-family:var(--font-display);font-size:.72rem;letter-spacing:.2em;color:var(--cyan)}
+.list{list-style:none;display:grid;gap:10px}
+.item{
+  display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;
+  padding:10px 10px 10px 12px;border-radius:14px;
+  background:linear-gradient(160deg,rgba(16,35,61,.98),rgba(7,20,38,.92));
+  border:1.5px solid var(--line);
+  transition:border-color .2s,box-shadow .2s,transform .25s var(--ease),background .2s,opacity .2s;
+  touch-action:manipulation;user-select:none;-webkit-user-select:none;
+}
+.item[draggable="true"]{cursor:grab}
+.item:hover{border-color:rgba(214,173,85,.6)}
+.item.dragging{opacity:.35;transform:scale(.98)}
+.item.over-top{box-shadow:0 -4px 0 0 var(--gold),0 0 22px rgba(214,173,85,.35)}
+.item.over-bottom{box-shadow:0 4px 0 0 var(--gold),0 0 22px rgba(214,173,85,.35)}
+.item.moved{animation:moved .5s var(--ease)}
+@keyframes moved{0%{background:rgba(83,216,232,.28);border-color:var(--cyan)}100%{}}
+.slot{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;font:800 1rem var(--font-display);color:#1a1205;background:linear-gradient(135deg,var(--gold-light),var(--gold));flex:0 0 44px}
+.who{display:flex;align-items:center;gap:10px;min-width:0}
+.grip{flex:0 0 auto;width:18px;height:26px;opacity:.55;background:radial-gradient(circle,var(--muted) 1.6px,transparent 1.8px) 0 0/9px 9px}
+.who-text{min-width:0}
+.who-text b{display:block;font-weight:800;line-height:1.3;font-size:clamp(.92rem,2vw,1.02rem)}
+.who-text small{display:inline-block;margin-top:3px;font:700 .62rem var(--font-display);letter-spacing:.1em;color:var(--cyan);border:1px solid rgba(83,216,232,.45);padding:2px 7px;border-radius:6px}
+.ctrl{display:flex;gap:6px}
+.ctrl button{width:44px;height:44px;border-radius:12px;border:1.5px solid var(--line);background:rgba(7,20,38,.7);color:var(--cyan);display:grid;place-items:center;transition:background .2s,border-color .2s}
+.ctrl button:hover:not([disabled]){background:rgba(83,216,232,.15);border-color:var(--cyan)}
+.ctrl button[disabled]{opacity:.3;cursor:not-allowed}
+.ctrl svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.mark{display:none;font:800 .7rem var(--font-display);letter-spacing:.1em;padding:6px 10px;border-radius:8px;white-space:nowrap}
+/* Keadaan selepas semakan */
+.list.checked .item{cursor:default}
+.list.checked .ctrl{display:none}
+.list.checked .mark{display:inline-block}
+.item.right{border-color:var(--ok);background:linear-gradient(160deg,rgba(20,70,50,.55),rgba(7,20,38,.92))}
+.item.right .mark{background:rgba(74,222,128,.15);color:var(--ok);border:1px solid rgba(74,222,128,.5)}
+.item.wrong{border-color:var(--bad);background:linear-gradient(160deg,rgba(80,25,30,.5),rgba(7,20,38,.92))}
+.item.wrong .mark{background:rgba(248,113,113,.15);color:#fca5a5;border:1px solid rgba(248,113,113,.5)}
+.item.wrong .slot{background:linear-gradient(135deg,#fca5a5,var(--bad))}
+.live{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+/* =========================================================
+   7. KEPUTUSAN
+   ========================================================= */
+.result{margin-top:22px;padding:clamp(20px,3.5vw,30px);display:none}
+.result.show{display:block;animation:fadeUp .6s var(--ease) both}
+.res-grid{display:grid;grid-template-columns:auto 1fr;gap:26px;align-items:center}
+.score-ring{width:160px;height:160px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--gold) calc(var(--p)*1%),rgba(169,183,201,.15) 0);box-shadow:0 0 30px rgba(214,173,85,.3)}
+.score-ring span{width:130px;height:130px;border-radius:50%;background:var(--bg2);display:grid;place-items:center;text-align:center;font:800 2.1rem var(--font-display);color:var(--gold);line-height:1}
+.score-ring small{display:block;font-size:.62rem;letter-spacing:.2em;color:var(--muted);margin-top:6px}
+.res-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:14px}
+.res-stats div{padding:12px;border-radius:12px;background:rgba(7,20,38,.6);border:1px solid var(--line);text-align:center}
+.res-stats span{display:block;font-size:.78rem;color:var(--muted)}
+.res-stats b{font:800 1.4rem var(--font-display)}
+.res-stats .g b{color:var(--ok)} .res-stats .r b{color:var(--bad)} .res-stats .t b{color:var(--gold)}
+.feedback{font-weight:800;font-size:clamp(1rem,2.4vw,1.15rem);color:var(--white)}
+.answer-key{margin-top:22px;padding-top:16px;border-top:1px solid var(--line)}
+.answer-key h3{font:700 .76rem var(--font-display);letter-spacing:.2em;color:var(--cyan);margin-bottom:10px}
+.answer-key ol{list-style:none;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.answer-key li{display:flex;gap:10px;align-items:center;padding:8px 10px;border-radius:10px;background:rgba(7,20,38,.55);border:1px solid rgba(214,173,85,.25);font-size:.92rem}
+.answer-key li b{flex:0 0 30px;height:30px;border-radius:8px;display:grid;place-items:center;font:800 .78rem var(--font-display);color:#1a1205;background:var(--gold)}
+
+/* =========================================================
+   8. NOTIFIKASI MISI / LENCANA EMAS
+   ========================================================= */
+.notice{position:fixed;inset:0;z-index:80;display:grid;place-items:center;padding:16px;background:rgba(3,10,20,.8);opacity:0;visibility:hidden;transition:opacity .3s,visibility 0s linear .3s}
+.notice.open{opacity:1;visibility:visible;transition:opacity .3s}
+.notice-box{max-width:480px;width:100%;text-align:center;padding:32px 24px;transform:scale(.85);transition:transform .5s var(--ease)}
+.notice.open .notice-box{transform:none}
+.badge{width:110px;height:110px;margin:0 auto 16px;border-radius:50%;display:grid;place-items:center}
+.badge.gold{background:radial-gradient(circle at 35% 30%,#fff3cf,var(--gold) 45%,#8a6420);box-shadow:0 0 40px rgba(214,173,85,.6);animation:pulse 2s ease-in-out infinite}
+.badge.gold svg{fill:#1a1205}
+.badge.plain{background:rgba(83,216,232,.12);border:2px solid var(--cyan)}
+.badge.plain svg{fill:var(--cyan)}
+.badge svg{width:56px;height:56px}
+@keyframes pulse{50%{box-shadow:0 0 60px rgba(214,173,85,.85)}}
+.notice-box h2{font:800 clamp(1.15rem,4vw,1.45rem) var(--font-display);color:var(--gold);letter-spacing:.06em;line-height:1.3}
+.notice-box p{margin-top:10px}
+.notice-box .ribbon{display:inline-block;margin-top:12px;padding:5px 14px;border-radius:999px;font:700 .68rem var(--font-display);letter-spacing:.16em;color:#1a1205;background:var(--gold)}
+
+/* =========================================================
+   9. RESPONSIF
+   ========================================================= */
+@media (max-width:900px){
+  .game-layout{grid-template-columns:1fr}
+  .side{position:static;order:2}
+  .game-top{flex-direction:column;align-items:flex-start}
+}
+@media (max-width:640px){
+  .res-grid{grid-template-columns:1fr;justify-items:center;text-align:center}
+  .answer-key ol{grid-template-columns:1fr}
+  .board{padding:12px}
+  .item{gap:8px;padding:8px}
+  .slot{width:38px;height:38px;flex-basis:38px;font-size:.9rem}
+  .grip{display:none}
+  .ctrl{flex-direction:column;gap:4px}
+  .ctrl button{width:44px;height:40px}
+  .btn-row .btn{flex:1 1 auto}
+}
+@media (max-width:380px){
+  .res-stats b{font-size:1.15rem}
+}
+
+/* =========================================================
+   10. KURANGKAN GERAKAN
+   ========================================================= */
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;animation-delay:0s!important;transition-duration:.001ms!important}
+  .bg-scan::before{display:none}
+}
+</style>
+</head>
+<body>
+
+<div class="bg-layer bg-gradient" aria-hidden="true"></div>
+<div class="bg-layer bg-grid" aria-hidden="true"></div>
+<canvas id="particles" aria-hidden="true"></canvas>
+<div class="bg-layer bg-scan" aria-hidden="true"></div>
+<div class="curtain" id="curtain" aria-hidden="true"></div>
+
+<main class="app">
+
+  <!-- ================= SKRIN A: INTRO ================= -->
+  <section class="screen active" id="intro" aria-label="Pengenalan Jejak Kronologi">
+    <div class="container">
+      <div class="emblem" aria-hidden="true">
+        <svg viewBox="0 0 120 120">
+          <g class="ring"><circle cx="60" cy="60" r="54" fill="none" stroke="#53D8E8" stroke-width="1.5" stroke-dasharray="6 8"/></g>
+          <circle cx="60" cy="60" r="44" fill="#10233D" stroke="#D6AD55" stroke-width="2.5"/>
+          <path d="M34 60h52" stroke="#D6AD55" stroke-width="2.5"/>
+          <circle cx="40" cy="60" r="5" fill="#53D8E8"/><circle cx="60" cy="60" r="5" fill="#D6AD55"/><circle cx="80" cy="60" r="5" fill="#53D8E8"/>
+          <path d="M40 55V44M60 65v11M80 55V44" stroke="#D6AD55" stroke-width="2.5"/>
+        </svg>
+      </div>
+      <span class="eyebrow">Agent History Academy · Modul 03</span>
+      <h1 class="intro-title">JEJAK KRONOLOGI</h1>
+      <p class="intro-mission">MISI MENYUSUN PERDANA MENTERI MALAYSIA</p>
+      <div class="panel hud intro-story">
+        <p>Selamat datang, Ejen!</p>
+        <p>Kamu kini berada di Bilik Kronologi Sejarah.</p>
+        <p>Sepuluh kedudukan Perdana Menteri Malaysia telah bercampur dan memerlukan bantuan kamu.</p>
+        <p>Susun semula nama pemimpin mengikut urutan yang betul untuk menyelesaikan misi ini!</p>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-gold btn-lg" id="btnStart" type="button">Mula Misi</button>
+        <a class="btn btn-ghost" data-hq href="#">Kembali ke Pusat Misi</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= SKRIN B: PERMAINAN ================= -->
+  <section class="screen top" id="game" aria-label="Permainan Jejak Kronologi">
+    <div class="container">
+      <div class="game-top">
+        <div>
+          <span class="eyebrow">Bilik Kronologi Sejarah</span>
+          <h2 class="heading">JEJAK KRONOLOGI</h2>
+          <p class="sub">Susun sepuluh kedudukan Perdana Menteri Malaysia dari yang pertama hingga yang kesepuluh.</p>
+        </div>
+        <a class="btn btn-ghost" data-hq href="#">Kembali ke Pusat Misi</a>
+      </div>
+
+      <div class="game-layout">
+        <!-- Panel arahan + kemajuan -->
+        <aside class="panel hud side" aria-label="Arahan dan kemajuan">
+          <h3>ARAHAN PERMAINAN</h3>
+          <ol class="howto">
+            <li>Kad nama telah bercampur. Nombor emas ialah kedudukan kad sekarang.</li>
+            <li><b>Komputer:</b> seret dan lepaskan kad ke tempat yang betul.</li>
+            <li><b>Telefon / tablet:</b> tekan butang ▲ (naik) atau ▼ (turun).</li>
+            <li>Ingat: Tun Dr. Mahathir ada dua kad, iaitu <b>Penggal Pertama</b> dan <b>Penggal Kedua</b>.</li>
+            <li>Tekan <b>Semak Jawapan</b> apabila sudah siap.</li>
+          </ol>
+
+          <div class="steps" aria-label="Langkah misi">
+            <span id="st1" class="on">SUSUN</span><span id="st2">SEMAK</span><span id="st3">KEPUTUSAN</span>
+          </div>
+          <div class="stat"><span>Kad dipindahkan</span><b id="moveTxt">0</b></div>
+          <div class="stat"><span>Kad yang sudah disentuh</span><b id="touchTxt">0 / 10</b></div>
+          <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="10" aria-valuenow="0" id="progBar" aria-label="Kad yang sudah disentuh"><i id="progFill"></i></div>
+          <div class="stat"><span>Markah terbaik (pelayar ini)</span><b id="bestTxt">–</b></div>
+
+          <button class="btn btn-gold" id="btnCheck" type="button">Semak Jawapan</button>
+          <button class="btn" id="btnShuffle" type="button">Susun Semula</button>
+          <button class="btn btn-gold" id="btnRetry" type="button" hidden>Cuba Lagi</button>
+        </aside>
+
+        <!-- Papan kad -->
+        <div>
+          <div class="panel hud board">
+            <div class="board-head"><b>FAIL KRONOLOGI</b><span>1 = paling awal · 10 = terkini</span></div>
+            <ol class="list" id="list" aria-label="Senarai kad Perdana Menteri"></ol>
+            <p class="live" id="live" aria-live="polite"></p>
+          </div>
+
+          <!-- Keputusan -->
+          <div class="panel hud result" id="result" aria-live="polite">
+            <div class="res-grid">
+              <div class="score-ring" id="ring" style="--p:0"><span><span id="scoreNum" style="width:auto;height:auto;background:none">0</span><small>/ 10 MARKAH</small></span></div>
+              <div>
+                <span class="eyebrow">Laporan Misi</span>
+                <div class="res-stats" style="margin-top:10px">
+                  <div class="g"><span>Betul</span><b id="rRight">0</b></div>
+                  <div class="r"><span>Salah</span><b id="rWrong">0</b></div>
+                  <div class="t"><span>Markah</span><b id="rTotal">0/10</b></div>
+                </div>
+                <p class="feedback" id="feedback"></p>
+              </div>
+            </div>
+            <div class="answer-key">
+              <h3>SUSUNAN YANG BETUL</h3>
+              <ol id="answerKey"></ol>
+            </div>
+            <div class="btn-row">
+              <button class="btn btn-gold" id="btnRetry2" type="button">Cuba Lagi</button>
+              <a class="btn btn-ghost" data-hq href="#">Kembali ke Pusat Misi</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- ================= NOTIFIKASI MISI ================= -->
+<div class="notice" id="notice" role="alertdialog" aria-modal="true" aria-labelledby="nTitle" aria-hidden="true">
+  <div class="panel hud notice-box">
+    <div class="badge" id="nBadge" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 16.9 6.1 20l1.2-6.5L2.5 8.9 9.1 8z"/></svg></div>
+    <h2 id="nTitle"></h2>
+    <p id="nText"></p>
+    <span class="ribbon" id="nRibbon" hidden>LENCANA EMAS · EJEN KRONOLOGI</span>
+    <div class="btn-row">
+      <button class="btn btn-gold" id="nClose" type="button">Lihat Keputusan</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   AGENT HISTORY ACADEMY – MODUL 03: JEJAK KRONOLOGI
+   ========================================================= */
+
+/* URL penuh Pusat Misi (Modul 01) */
+var MODULE01_URL = 'https://kaymaria559-hue.github.io/agent-history-academy/';
+
+/* ---------------------------------------------------------
+   SUSUNAN BETUL: 10 KEDUDUKAN PERDANA MENTERI
+   (Sumber: Buku Teks Sejarah Tahun 6 KPM, ms. 109–115,
+   dan Modul 02 Arkib Pemimpin.)
+   Ini ialah sepuluh KEDUDUKAN, bukan sepuluh individu.
+   Tun Dr. Mahathir memegang kedudukan ke-4 dan ke-7.
+   --------------------------------------------------------- */
+var ANSWER = [
+  { id:1,  name:'Tunku Abdul Rahman Putra Al-Haj' },
+  { id:2,  name:'Tun Abdul Razak bin Hussein' },
+  { id:3,  name:'Tun Hussein Onn' },
+  { id:4,  name:'Tun Dr. Mahathir bin Mohamad', term:'Penggal Pertama' },
+  { id:5,  name:'Tun Abdullah bin Ahmad Badawi' },
+  { id:6,  name:'Dato\' Sri Mohd Najib bin Tun Abdul Razak' },
+  { id:7,  name:'Tun Dr. Mahathir bin Mohamad', term:'Penggal Kedua' },
+  { id:8,  name:'Tan Sri Mahiaddin bin Md Yassin' },
+  { id:9,  name:'Dato\' Seri Ismail Sabri bin Yaakob' },
+  { id:10, name:'Dato\' Seri Anwar bin Ibrahim' }
+];
+
+/* Maklum balas mengikut markah */
+function feedbackFor(score){
+  if(score === 10) return 'TAHNIAH! Kamu telah menjadi Ejen Kronologi Cemerlang!';
+  if(score >= 7)   return 'Bagus! Kamu hampir menyelesaikan misi dengan sempurna.';
+  if(score >= 4)   return 'Usaha yang baik! Teruskan berlatih.';
+  return 'Jangan berputus asa, Ejen! Cuba sekali lagi.';
+}
+
+(function(){
+  'use strict';
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var $ = function(id){ return document.getElementById(id); };
+
+  /* ---------- Storan setempat (markah terbaik, pelayar ini sahaja) ---------- */
+  var KEY_BEST = 'aha_m3_best';
+  function loadBest(){ try { var v = JSON.parse(localStorage.getItem(KEY_BEST)); return typeof v === 'number' ? v : null; } catch(e){ return null; } }
+  function saveBest(v){ try { localStorage.setItem(KEY_BEST, JSON.stringify(v)); } catch(e){} }
+  var best = loadBest();
+
+  /* ---------- Pautan Kembali ke Pusat Misi ---------- */
+  document.querySelectorAll('[data-hq]').forEach(function(a){
+    a.setAttribute('href', MODULE01_URL);
+    a.setAttribute('target', '_top'); // keluar dari bingkai Google Sites
+  });
+
+  /* ---------- Navigasi skrin ---------- */
+  var current = 'intro', busy = false;
+  function goTo(id){
+    if(busy || id === current) return;
+    busy = true;
+    var c = $('curtain'); if(!reduceMotion) c.classList.add('show');
+    setTimeout(function(){
+      $(current).classList.remove('active'); $(id).classList.add('active');
+      current = id; window.scrollTo(0,0); c.classList.remove('show');
+      var h = $(id).querySelector('h1,h2'); if(h){ h.setAttribute('tabindex','-1'); h.focus({preventScroll:true}); }
+      setTimeout(function(){ busy = false; }, reduceMotion ? 50 : 500);
+    }, reduceMotion ? 0 : 280);
+  }
+
+  /* ---------- Keadaan permainan ---------- */
+  var order = [];      // susunan semasa (array id)
+  var touched = {};    // kad yang telah dipindahkan murid
+  var moves = 0;
+  var checked = false;
+  var list = $('list');
+
+  function shuffle(){
+    // Kocok sehingga tiada lebih daripada 2 kad berada di tempat betul secara kebetulan
+    var a, fixed, tries = 0;
+    do {
+      a = ANSWER.map(function(x){ return x.id; });
+      for(var i = a.length - 1; i > 0; i--){ var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; }
+      fixed = a.filter(function(id, k){ return id === k + 1; }).length;
+      tries++;
+    } while(fixed > 2 && tries < 50);
+    return a;
+  }
+  function byId(id){ return ANSWER[id - 1]; }
+  function label(p){ return p.name + (p.term ? ' (' + p.term + ')' : ''); }
+
+  function newGame(){
+    order = shuffle(); touched = {}; moves = 0; checked = false;
+    list.classList.remove('checked');
+    $('result').classList.remove('show');
+    $('btnCheck').hidden = false; $('btnShuffle').hidden = false; $('btnRetry').hidden = true;
+    setSteps(1);
+    render();
+    updateStats();
+  }
+
+  var ICON_UP = '<svg viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></svg>';
+  var ICON_DN = '<svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>';
+
+  function render(movedId){
+    list.innerHTML = '';
+    order.forEach(function(id, k){
+      var p = byId(id);
+      var li = document.createElement('li');
+      li.className = 'item';
+      li.dataset.id = id;
+      li.draggable = !checked;
+      li.setAttribute('aria-label', 'Kedudukan ' + (k + 1) + ': ' + label(p));
+      li.innerHTML =
+        '<span class="slot" aria-hidden="true">' + (k + 1) + '</span>' +
+        '<div class="who"><span class="grip" aria-hidden="true"></span><div class="who-text"><b>' + p.name + '</b>' +
+          (p.term ? '<small>' + p.term.toUpperCase() + '</small>' : '') + '</div></div>' +
+        '<div class="ctrl">' +
+          '<button type="button" class="up" aria-label="Naikkan ' + label(p) + '"' + (k === 0 ? ' disabled' : '') + '>' + ICON_UP + '</button>' +
+          '<button type="button" class="dn" aria-label="Turunkan ' + label(p) + '"' + (k === order.length - 1 ? ' disabled' : '') + '>' + ICON_DN + '</button>' +
+        '</div>' +
+        '<span class="mark"></span>';
+      if(id === movedId && !reduceMotion) li.classList.add('moved');
+      list.appendChild(li);
+    });
+  }
+
+  /* Pindah kad dari indeks 'from' ke indeks 'to' */
+  function move(from, to, focusDir){
+    if(checked || from === to || to < 0 || to >= order.length) return;
+    var id = order.splice(from, 1)[0];
+    order.splice(to, 0, id);
+    touched[id] = true; moves++;
+    render(id);
+    updateStats();
+    $('live').textContent = label(byId(id)) + ' kini di kedudukan ' + (to + 1) + '.';
+    if(focusDir){
+      var btn = list.children[to].querySelector(focusDir === 'up' ? '.up' : '.dn');
+      if(btn && btn.disabled) btn = list.children[to].querySelector(focusDir === 'up' ? '.dn' : '.up');
+      if(btn) btn.focus();
+    }
+  }
+
+  /* Butang ▲ / ▼ (sentuh, tetikus dan papan kekunci) */
+  list.addEventListener('click', function(e){
+    var b = e.target.closest('button'); if(!b || b.disabled) return;
+    var li = b.closest('.item'); var k = Array.prototype.indexOf.call(list.children, li);
+    if(b.classList.contains('up')) move(k, k - 1, 'up');
+    else if(b.classList.contains('dn')) move(k, k + 1, 'dn');
+  });
+
+  /* Seret dan lepas (desktop) */
+  var dragIdx = -1;
+  function clearOver(){ list.querySelectorAll('.over-top,.over-bottom').forEach(function(x){ x.classList.remove('over-top','over-bottom'); }); }
+  list.addEventListener('dragstart', function(e){
+    var li = e.target.closest('.item'); if(!li || checked) return;
+    dragIdx = Array.prototype.indexOf.call(list.children, li);
+    li.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+    try { e.dataTransfer.setData('text/plain', li.dataset.id); } catch(err){}
+  });
+  list.addEventListener('dragover', function(e){
+    if(dragIdx < 0) return;
+    var li = e.target.closest('.item'); if(!li) return;
+    e.preventDefault(); e.dataTransfer.dropEffect = 'move';
+    var r = li.getBoundingClientRect(), after = e.clientY > r.top + r.height / 2;
+    clearOver(); li.classList.add(after ? 'over-bottom' : 'over-top');
+  });
+  list.addEventListener('dragleave', function(e){ if(!list.contains(e.relatedTarget)) clearOver(); });
+  list.addEventListener('drop', function(e){
+    if(dragIdx < 0) return;
+    e.preventDefault();
+    var li = e.target.closest('.item');
+    var target = dragIdx;
+    if(li){
+      var k = Array.prototype.indexOf.call(list.children, li);
+      var r = li.getBoundingClientRect(), after = e.clientY > r.top + r.height / 2;
+      target = after ? k + 1 : k;
+      if(target > dragIdx) target--;     // kira semula selepas kad dikeluarkan
+    }
+    clearOver();
+    var from = dragIdx; dragIdx = -1;
+    move(from, target);
+  });
+  list.addEventListener('dragend', function(){
+    dragIdx = -1; clearOver();
+    list.querySelectorAll('.dragging').forEach(function(x){ x.classList.remove('dragging'); });
+  });
+
+  /* ---------- Statistik / penunjuk kemajuan ---------- */
+  function updateStats(){
+    var n = Object.keys(touched).length;
+    $('moveTxt').textContent = moves;
+    $('touchTxt').textContent = n + ' / 10';
+    $('progFill').style.width = (n * 10) + '%';
+    $('progBar').setAttribute('aria-valuenow', n);
+    $('bestTxt').textContent = best === null ? '–' : best + ' / 10';
+  }
+  function setSteps(s){
+    ['st1','st2','st3'].forEach(function(id, i){
+      var el = $(id); el.className = (i + 1 < s) ? 'done' : (i + 1 === s ? 'on' : '');
+    });
+  }
+
+  /* ---------- Semak jawapan ---------- */
+  function check(){
+    if(checked) return;
+    checked = true;
+    setSteps(2);
+    var right = 0;
+    render();
+    list.classList.add('checked');
+    Array.prototype.forEach.call(list.children, function(li, k){
+      var id = +li.dataset.id, ok = (id === k + 1);
+      li.draggable = false;
+      li.classList.add(ok ? 'right' : 'wrong');
+      li.querySelector('.mark').textContent = ok ? '✓ BETUL' : '✗ SEPATUTNYA ' + id;
+      if(ok) right++;
+    });
+    var wrong = 10 - right;
+    if(best === null || right > best){ best = right; saveBest(best); }
+    updateStats();
+
+    $('rRight').textContent = right;
+    $('rWrong').textContent = wrong;
+    $('rTotal').textContent = right + '/10';
+    $('feedback').textContent = feedbackFor(right);
+    $('answerKey').innerHTML = ANSWER.map(function(p){
+      return '<li><b>' + p.id + '</b><span>' + label(p) + '</span></li>';
+    }).join('');
+    $('btnCheck').hidden = true; $('btnShuffle').hidden = true; $('btnRetry').hidden = false;
+    $('result').classList.add('show');
+    animateScore(right);
+    setSteps(3);
+    showNotice(right);
+  }
+
+  /* Paparan markah beranimasi */
+  function animateScore(target){
+    var ring = $('ring'), num = $('scoreNum');
+    if(reduceMotion){ num.textContent = target; ring.style.setProperty('--p', target * 10); return; }
+    var start = null, dur = 1200;
+    function step(t){
+      if(!start) start = t;
+      var k = Math.min(1, (t - start) / dur), e = 1 - Math.pow(1 - k, 3);
+      num.textContent = Math.round(target * e);
+      ring.style.setProperty('--p', (target * 10 * e).toFixed(1));
+      if(k < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+
+  /* ---------- Notifikasi misi ---------- */
+  var notice = $('notice');
+  function showNotice(score){
+    var perfect = score === 10;
+    $('nBadge').className = 'badge ' + (perfect ? 'gold' : 'plain');
+    $('nTitle').textContent = perfect ? 'MISI SELESAI!' : 'MISI DISEMAK';
+    $('nText').textContent = feedbackFor(score) + ' Markah kamu: ' + score + '/10.';
+    $('nRibbon').hidden = !perfect;
+    notice.classList.add('open'); notice.setAttribute('aria-hidden','false');
+    setTimeout(function(){ $('nClose').focus(); }, 60);
+  }
+  function hideNotice(){
+    if(!notice.classList.contains('open')) return;
+    notice.classList.remove('open'); notice.setAttribute('aria-hidden','true');
+    $('result').scrollIntoView({behavior: reduceMotion ? 'auto' : 'smooth', block:'start'});
+  }
+  $('nClose').addEventListener('click', hideNotice);
+  notice.addEventListener('click', function(e){ if(e.target === notice) hideNotice(); });
+  document.addEventListener('keydown', function(e){ if(e.key === 'Escape') hideNotice(); });
+
+  /* ---------- Butang utama ---------- */
+  $('btnStart').addEventListener('click', function(){ newGame(); goTo('game'); });
+  $('btnCheck').addEventListener('click', check);
+  $('btnShuffle').addEventListener('click', function(){ newGame(); $('live').textContent = 'Kad telah dikocok semula.'; });
+  function retry(){ newGame(); window.scrollTo({top:0, behavior: reduceMotion ? 'auto' : 'smooth'}); }
+  $('btnRetry').addEventListener('click', retry);
+  $('btnRetry2').addEventListener('click', retry);
+
+  /* ---------- Zarah latar belakang ---------- */
+  var cv = $('particles'), ctx = cv.getContext('2d'), parts = [], W = 0, H = 0, DPR = Math.min(window.devicePixelRatio || 1, 2);
+  function resize(){
+    W = innerWidth; H = innerHeight; cv.width = W * DPR; cv.height = H * DPR; cv.style.width = W + 'px'; cv.style.height = H + 'px';
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+    var c = Math.min(70, Math.round(W * H / 22000)); parts = [];
+    for(var i = 0; i < c; i++) parts.push({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.6+.4,vy:-(Math.random()*.25+.05),vx:(Math.random()-.5)*.12,a:Math.random()*.6+.2,g:Math.random()<.25});
+    if(reduceMotion) draw(false);
+  }
+  function draw(m){
+    ctx.clearRect(0,0,W,H);
+    parts.forEach(function(p){
+      if(m){ p.x += p.vx; p.y += p.vy; if(p.y < -5){ p.y = H + 5; p.x = Math.random()*W; } }
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fillStyle = p.g ? 'rgba(214,173,85,' + p.a + ')' : 'rgba(83,216,232,' + p.a + ')'; ctx.fill();
+    });
+  }
+  function loop(){ if(!document.hidden) draw(true); requestAnimationFrame(loop); }
+  addEventListener('resize', resize); resize();
+  if(!reduceMotion) requestAnimationFrame(loop);
+
+  updateStats();
+})();
+</script>
+</body>
+</html>
